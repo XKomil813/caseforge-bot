@@ -1,0 +1,6 @@
+[build]
+  publish = "src"
+  command = ""
+
+[context.production.environment]
+  BOT_WEBAPP_URL = "https://case-forge.netlify.app/"
