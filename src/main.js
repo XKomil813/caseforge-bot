@@ -19,18 +19,9 @@ function pickItem() {
   return caseItems[0];
 }
 
-openBtn.addEventListener('click', async () => {
+openBtn.addEventListener('click', () => {
   status.textContent = '🔄 Case ochilmoqda...';
   message.style.display = 'none';
-
-  // To‘liq ekran rejimiga o‘tish
-  try {
-    if (!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
-    }
-  } catch (error) {
-    console.error('Fullscreen error:', error);
-  }
 
   setTimeout(() => {
     const item = pickItem();
@@ -40,25 +31,4 @@ openBtn.addEventListener('click', async () => {
   }, 1200);
 });
 
-const fullscreenBtn = document.getElementById('fullscreenBtn');
-fullscreenBtn.addEventListener('click', async () => {
-  const elem = document.documentElement;
 
-  try {
-    if (!document.fullscreenElement) {
-      await elem.requestFullscreen();
-      fullscreenBtn.textContent = 'Chiqish';
-    } else {
-      await document.exitFullscreen();
-      fullscreenBtn.textContent = 'To‘liq ekran';
-    }
-  } catch (error) {
-    console.error('Fullscreen error:', error);
-  }
-});
-
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement) {
-    fullscreenBtn.textContent = 'To‘liq ekran';
-  }
-});
