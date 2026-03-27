@@ -1,8 +1,19 @@
 require('dotenv').config();
 const { Telegraf, Markup } = require('telegraf');
+const http = require('http'); // Port uchun kerak
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const WEBAPP_URL = process.env.BOT_WEBAPP_URL || 'https://case-forge.netlify.app';
+
+// Render uchun "sog'lomlik" tekshiruvi (Health Check)
+// Bu qism Render so'rayotgan portni ochib beradi
+const port = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('CaseForge Bot is running!');
+}).listen(port, '0.0.0.0', () => {
+  console.log(`Server ${port}-portda ishlamoqda`);
+});
 
 if (!BOT_TOKEN) {
   console.error('Error: BOT_TOKEN is required in .env');
@@ -36,7 +47,6 @@ bot.start(async (ctx) => {
     ])
   );
 });
-
 
 bot.launch().then(() => console.log('Telegram bot ishga tushdi')).catch(console.error);
 

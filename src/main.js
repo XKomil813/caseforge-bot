@@ -1,34 +1,45 @@
+// Telegram WebApp API ni ishga tushirish
+const tg = window.Telegram.WebApp;
+tg.expand(); // WebAppni to'liq ekranga yoyish
+
 const openBtn = document.getElementById('openBtn');
-const status = document.getElementById('status');
-const message = document.getElementById('message');
+const statusText = document.getElementById('status');
+const balanceText = document.getElementById('balance');
 
-const caseItems = [
-  { name: 'Common', chance: 60, value: 15 },
-  { name: 'Rare', chance: 25, value: 35 },
-  { name: 'Epic', chance: 10, value: 80 },
-  { name: 'Legendary', chance: 5, value: 220 },
-];
-
-function pickItem() {
-  const r = Math.random() * 100;
-  let acc = 0;
-  for (const item of caseItems) {
-    acc += item.chance;
-    if (r <= acc) return item;
-  }
-  return caseItems[0];
-}
+let balance = 0;
 
 openBtn.addEventListener('click', () => {
-  status.textContent = '🔄 Case ochilmoqda...';
-  message.style.display = 'none';
+    if (balance < 10) {
+        statusText.innerText = "Mablag' yetarli emas (Kamida 10$)";
+        statusText.classList.add('text-red-500');
+        return;
+    }
 
-  setTimeout(() => {
-    const item = pickItem();
-    status.textContent = '✅ Case ochilmoqda yakunlandi!';
-    message.style.display = 'block';
-    message.textContent = `🏆 Sizga ${item.name} tushdi (Qiymat: ${item.value} coin)`;
-  }, 1200);
+    // Case ochish animatsiyasi simulyatsiyasi
+    openBtn.disabled = true;
+    statusText.innerText = "Case ochilmoqda...";
+    
+    setTimeout(() => {
+        const items = [
+            {name: "AK-47 | Redline", color: "text-red-500"},
+            {name: "M4A4 | Howl", color: "text-orange-500"},
+            {name: "AWP | Dragon Lore", color: "text-yellow-400"},
+            {name: "Glock-18 | Fade", color: "text-purple-500"}
+        ];
+        const win = items[Math.floor(Math.random() * items.length)];
+        
+        statusText.innerHTML = `Siz yutdingiz: <span class="${win.color}">${win.name}</span>`;
+        openBtn.disabled = false;
+        
+        // Telegramga ma'lumot yuborish (ixtiyoriy)
+        // tg.sendData(JSON.stringify({item: win.name}));
+    }, 2000);
 });
 
-
+// To'ldirish tugmasi uchun vaqtincha funksiya
+document.getElementById('topUpBtn').addEventListener('click', () => {
+    balance += 100;
+    balanceText.innerText = balance.toFixed(2);
+    statusText.innerText = "Balans to'ldirildi!";
+    statusText.classList.remove('text-red-500');
+});
