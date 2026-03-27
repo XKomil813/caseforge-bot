@@ -30,9 +30,9 @@ function pickCaseItem() {
 
 bot.start(async (ctx) => {
   await ctx.reply(
-    '👋 Salom! CS2 case ochishga xush kelibsiz. Web app orqali ochish uchun pastdagi tugmani bosing.',
+    '🌟 Salom! CS2 case ochishga xush kelibsiz. CaseForge ni oching va bepul skinlarni yutib oling!',
     Markup.inlineKeyboard([
-      Markup.button.webApp('Web App orqali ochish', WEBAPP_URL),
+      Markup.button.webApp('CaseForge ni ochish', WEBAPP_URL),
     ])
   );
 });
