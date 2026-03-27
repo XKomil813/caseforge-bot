@@ -1,3 +1,9 @@
+const http = require('http');
+// Render port xatosini bartaraf qilish uchun soxta server
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is running');
+}).listen(process.env.PORT || 3000);
 require('dotenv').config();
 const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
