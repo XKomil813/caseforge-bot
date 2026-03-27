@@ -1,9 +1,8 @@
-// 1. Eng tepada o'zgaruvchilarni e'lon qilamiz
-const tg = window.Telegram.WebApp;
+// 1. O'zgaruvchilarni e'lon qilish
+const tg = window.Telegram ? window.Telegram.WebApp : null;
 let balance = 0;
 let totalOpenedCount = 0;
 
-// DOM elementlarini olamiz
 const openBtn = document.getElementById('openBtn');
 const statusText = document.getElementById('status');
 const balanceDisplay = document.getElementById('balance-display');
@@ -14,20 +13,17 @@ if (tg) {
     tg.expand();
     tg.ready();
     
-    // Foydalanuvchi ma'lumotlarini profilga yozish
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
-        if (document.getElementById('user-name')) {
-            document.getElementById('user-name').innerText = user.first_name || "Foydalanuvchi";
-        }
-        if (document.getElementById('user-id')) {
-            document.getElementById('user-id').innerText = `ID: ${user.id || "00000000"}`;
-        }
+        const nameElem = document.getElementById('user-name');
+        const idElem = document.getElementById('user-id');
+        if (nameElem) nameElem.innerText = user.first_name || "Foydalanuvchi";
+        if (idElem) idElem.innerText = `ID: ${user.id || "00000000"}`;
     }
 }
 
-// 3. Bo'limlarni almashtirish funksiyasi (WINDOW ob'ektiga biriktiramiz)
-window.showSection = function(sectionId) {
+// 3. BO'LIMLARNI ALMASHTIRISH (Xatosiz variant)
+window.showSection = function(sectionId, element) {
     // Hamma bo'limlarni yashirish
     const sections = document.querySelectorAll('.section');
     sections.forEach(s => s.classList.add('hidden'));
@@ -46,13 +42,17 @@ window.showSection = function(sectionId) {
     });
 
     // Bosilgan tugmani rangini o'zgartirish
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('text-orange-500');
-        event.currentTarget.classList.remove('text-gray-500');
+    // Agar element funksiya orqali kelsa, uni rangini o'zgartiramiz
+    if (element) {
+        element.classList.add('text-orange-500');
+        element.classList.remove('text-gray-500');
+    } else if (window.event && window.event.currentTarget) {
+        window.event.currentTarget.classList.add('text-orange-500');
+        window.event.currentTarget.classList.remove('text-gray-500');
     }
 };
 
-// 4. UI yangilash (Balans va Statistika)
+// 4. UI yangilash
 function updateUI() {
     const displayVal = Math.floor(balance);
     if (balanceDisplay) balanceDisplay.innerText = displayVal;
@@ -99,5 +99,5 @@ if (topUpBtn) {
     });
 }
 
-// Dasturni birinchi marta yangilab qo'yish
+// Ilk yuklanganda UI ni chizish
 updateUI();
