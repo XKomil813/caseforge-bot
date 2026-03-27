@@ -36,6 +36,50 @@ app.get('/api/user/:id', async (req, res) => {
   if (user) res.json({ success: true, coins: user.coins, totalOpened: user.totalOpened, inventory: user.inventory });
   else res.json({ success: false });
 });
+// Admin ID-ni o'zgaruvchiga olamiz
+const ADMIN_ID = 8446680998; 
+
+bot.command('admin', (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) {
+    return ctx.reply(`Siz admin emassiz. Sizning ID: ${ctx.from.id}`);
+  }
+  
+  ctx.session = { step: 'waiting_for_id' };
+  ctx.reply("Siz adminsiz! Coin berish uchun foydalanuvchi ID-sini yuboring:");
+});
+
+// Admin xabarlarini qayta ishlash
+bot.on('text', async (ctx) => {
+  if (ctx.from.id !== ADMIN_ID || !ctx.session) return;
+
+  if (ctx.session.step === 'waiting_for_id') {
+    ctx.session.targetId = ctx.message.text;
+    ctx.session.step = 'waiting_for_amount';
+    return ctx.reply(`ID ${ctx.session.targetId} uchun qancha coin bermoqchisiz?`);
+  }
+
+  if (ctx.session.step === 'waiting_for_amount') {
+    const amount = parseInt(ctx.message.text);
+    const targetId = ctx.session.targetId;
+
+    if (isNaN(amount)) return ctx.reply("Iltimos, faqat raqam yuboring!");
+
+    try {
+      const user = await User.findOne({ telegramId: targetId });
+      if (user) {
+        user.coins += amount;
+        await user.save();
+        ctx.reply(`Muvaffaqiyatli! Foydalanuvchi (ID: ${targetId}) balansiga ${amount} coin qo'shildi.`);
+        bot.telegram.sendMessage(targetId, `🎁 Admin tomonidan sizga ${amount} coin sovg'a qilindi!`);
+      } else {
+        ctx.reply("Bunday foydalanuvchi topilmadi.");
+      }
+    } catch (e) {
+      ctx.reply("Xatolik yuz berdi.");
+    }
+    ctx.session = null; // Sessiyani tozalash
+  }
+});
 
 // Keysni ochish API
 app.post('/api/open-case', async (req, res) => {
