@@ -26,45 +26,54 @@ bot.use(session());
 
 // --- ASOSIY START BUYRUG'I ---
 bot.start(async (ctx) => {
-  const telegramId = ctx.from.id;
-  const inviterId = ctx.payload; // t.me/bot?start=12345 dagi 12345 qismi
+  try {
+    const telegramId = ctx.from.id;
+    const inviterId = ctx.payload;
 
-  let user = await User.findOne({ telegramId });
+    // 1. Avval foydalanuvchini qidiramiz
+    let user = await User.findOne({ telegramId });
 
-  if (!user) {
-    user = new User({
-      telegramId,
-      username: ctx.from.username || ctx.from.first_name,
-      coins: 0
-    });
+    // 2. Agar foydalanuvchi yo'q bo'lsa, keyin yaratamiz
+    if (!user) {
+      user = new User({
+        telegramId,
+        username: ctx.from.username || ctx.from.first_name,
+        coins: 0
+      });
 
-    // Referal tizimi: Agar kimdir taklif qilgan bo'lsa
-    if (inviterId && !isNaN(inviterId) && parseInt(inviterId) !== telegramId) {
-      user.referredBy = parseInt(inviterId);
+      // Referal tizimi
+      if (inviterId && !isNaN(inviterId) && parseInt(inviterId) !== telegramId) {
+        user.referredBy = parseInt(inviterId);
+        
+        // Taklif qilgan odamga 500 coin berish
+        await User.findOneAndUpdate(
+          { telegramId: parseInt(inviterId) },
+          { $inc: { coins: 500 } }
+        );
+        
+        try {
+          await bot.telegram.sendMessage(inviterId, ` Do'stingiz qo'shildi! Sizga 500 coin berildi.`);
+        } catch (e) { console.log("Referalga xabar yuborishda xato"); }
+      }
       
-      // Taklif qilgan odamga 500 coin sovg'a
-      await User.findOneAndUpdate(
-        { telegramId: parseInt(inviterId) },
-        { $inc: { coins: 500 } }
-      );
-      
-      try {
-        await bot.telegram.sendMessage(inviterId, `🎉 Tabriklaymiz! Do'stingiz qo'shildi va hisobingizga 500 coin tushdi.`);
-      } catch (e) { console.log("Xabar yuborib bo'lmadi"); }
+      await user.save();
     }
-    await user.save();
+
+    // 3. Xabarni yuboramiz
+    const refLink = `https://t.me/${ctx.botInfo.username}?start=${telegramId}`;
+    await ctx.reply(
+      ` Salom, ${ctx.from.first_name}!\n\n` +
+      ` Balansingiz: ${user.coins} coin\n` +
+      ` Do'stlarni taklif qiling va 500 coin oling:\n${refLink}`,
+      Markup.inlineKeyboard([
+        [Markup.button.webApp(" CaseForge-ni ochish", process.env.BOT_WEBAPP_URL)]
+      ])
+    );
+
+  } catch (error) {
+    console.error("Start xatosi:", error);
+    ctx.reply("Kechirasiz, tizimda xatolik yuz berdi.");
   }
-
-  const refLink = `https://t.me/${ctx.botInfo.username}?start=${telegramId}`;
-
-  await ctx.reply(
-    `👋 Salom, ${ctx.from.first_name}!\n\n` +
-    `💰 Balansingiz: ${user.coins} coin\n` +
-    `🔗 Do'stlarni taklif qiling va 500 coin oling:\n${refLink}`,
-    Markup.inlineKeyboard([
-      [Markup.button.webApp("🕹 Case ochish (500 coin)", WEBAPP_URL)]
-    ])
-  );
 });
 
 // --- ADMIN PANEL (Balans to'ldirish) ---
