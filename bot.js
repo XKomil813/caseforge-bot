@@ -29,9 +29,9 @@ function pickCaseItem() {
 }
 
 bot.start(async (ctx) => {
-  await ctx.reply(
+  await ctx.reply( 
     '🌟 Salom! CS2 case ochishga xush kelibsiz. CaseForge ni oching va bepul skinlarni yutib oling!',
-    Markup.inlineKeyboard([
+    Markup.inlineKeyboard([  
       Markup.button.webApp('CaseForge ni ochish', WEBAPP_URL),
     ])
   );
