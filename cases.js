@@ -3,7 +3,7 @@ const CASES_DATA = {
     budget: {
         name: "Budget Case",
         price: 500,
-        image: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXU5A1PIYQNqhpOSV-fRPasw8rsUFJ5KBFZv668FFYuh6eZJz9H7o-ikZSOlP_wIK7U2D4B68cp2u_E9N2i2Vax_0VvazjyI9XAcVNrNA7U-Fm9yOq-hp_u6Z_AmGwj2HL8GvE4Xw",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRPdSGg78g5WNQd_7sNsTbaXlrjT-rXBsmKg&s",
         items: [
             { name: "Sticker | Tyloo (Gold)", price: 3500, chance: 3, color: "text-yellow-400" },
             { name: "Sticker | Liquid (Holo)", price: 1200, chance: 12, color: "text-pink-500" },
