@@ -96,17 +96,5 @@ if (openBtn) {
     });
 }
 
-// 7. Balansni to'ldirish
-if (topUpBtn) {
-    topUpBtn.addEventListener('click', () => {
-        balance += 100;
-        updateUI();
-        
-        const originalText = topUpBtn.innerHTML;
-        topUpBtn.innerHTML = '<span>BAJARILDI!</span>';
-        setTimeout(() => { topUpBtn.innerHTML = originalText; }, 1000);
-    });
-}
-
 // Dasturni ilk bor ishga tushirish
 updateUI();

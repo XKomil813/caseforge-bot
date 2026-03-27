@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 // --- SOZLAMALAR ---
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const WEBAPP_URL = process.env.BOT_WEBAPP_URL;
-const ADMIN_ID = 5441584347; // O'zingizning ID-ingizni tekshirib ko'ring
+const ADMIN_ID = 8446680998; // O'zingizning ID-ingizni tekshirib ko'ring
 
 // --- DATABASE ULANISHI ---
 mongoose.connect(process.env.MONGO_URI)
