@@ -3,7 +3,7 @@ const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
-
+const express = require('express');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -83,7 +83,16 @@ bot.on('text', async (ctx) => {
     ctx.session = null;
   }
 });
+// Cron-job uchun asosiy sahifa (404 xatosini yo'qotadi)
+app.get('/', (req, res) => {
+  res.send('Bot is active! 🚀');
+});
 
+// Portni Render avtomatik beradi, yoki 10000 ishlatiladi
 const PORT = process.env.PORT || 10000;
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Ping server running on port ${PORT}`);
+});
+
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
 bot.launch();
