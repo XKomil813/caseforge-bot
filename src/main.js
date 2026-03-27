@@ -1,30 +1,50 @@
-// 1. O'zgaruvchilarni e'lon qilish
+// 1. Telegram WebApp obyektini e'lon qilish
 const tg = window.Telegram ? window.Telegram.WebApp : null;
+
+// 2. Asosiy o'zgaruvchilar
 let balance = 0;
 let totalOpenedCount = 0;
 
+// DOM elementlarini bog'lash
 const openBtn = document.getElementById('openBtn');
 const statusText = document.getElementById('status');
 const balanceDisplay = document.getElementById('balance-display');
 const topUpBtn = document.getElementById('topUpBtn');
 
-// 2. Telegramni ishga tushirish
+// 3. Telegram WebApp-ni ishga tushirish va ma'lumotlarni yuklash
 if (tg) {
     tg.expand();
     tg.ready();
     
+    // Foydalanuvchi ma'lumotlarini profilga yozish
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
+        
+        // Ismni o'rnatish
         const nameElem = document.getElementById('user-name');
+        if (nameElem) {
+            nameElem.innerText = (user.first_name + (user.last_name ? " " + user.last_name : "")).toUpperCase();
+        }
+        
+        // ID ni o'rnatish
         const idElem = document.getElementById('user-id');
-        if (nameElem) nameElem.innerText = user.first_name || "Foydalanuvchi";
-        if (idElem) idElem.innerText = `ID: ${user.id || "00000000"}`;
+        if (idElem) {
+            idElem.innerText = `ID: ${user.id}`;
+        }
+
+        // AVATAR (RASM) NI CHIQARISH
+        if (user.photo_url) {
+            const avatarContainer = document.querySelector('#profile-section .w-24.h-24');
+            if (avatarContainer) {
+                avatarContainer.innerHTML = `<img src="${user.photo_url}" class="w-full h-full rounded-full object-cover border-2 border-orange-500 shadow-lg">`;
+            }
+        }
     }
 }
 
-// 3. BO'LIMLARNI ALMASHTIRISH (Xatosiz variant)
+// 4. Sahifalararo o'tish (Navigation)
 window.showSection = function(sectionId, element) {
-    // Hamma bo'limlarni yashirish
+    // Barcha bo'limlarni yashirish
     const sections = document.querySelectorAll('.section');
     sections.forEach(s => s.classList.add('hidden'));
 
@@ -41,18 +61,14 @@ window.showSection = function(sectionId, element) {
         btn.classList.add('text-gray-500');
     });
 
-    // Bosilgan tugmani rangini o'zgartirish
-    // Agar element funksiya orqali kelsa, uni rangini o'zgartiramiz
+    // Bosilgan tugmani faol qilish
     if (element) {
         element.classList.add('text-orange-500');
         element.classList.remove('text-gray-500');
-    } else if (window.event && window.event.currentTarget) {
-        window.event.currentTarget.classList.add('text-orange-500');
-        window.event.currentTarget.classList.remove('text-gray-500');
     }
 };
 
-// 4. UI yangilash
+// 5. UI ni yangilash funksiyasi
 function updateUI() {
     const displayVal = Math.floor(balance);
     if (balanceDisplay) balanceDisplay.innerText = displayVal;
@@ -61,11 +77,15 @@ function updateUI() {
     if (statsOpened) statsOpened.innerText = totalOpenedCount;
 }
 
-// 5. Case ochish logikasi
+// 6. Case ochish mantiqi
 if (openBtn) {
     openBtn.addEventListener('click', () => {
         if (balance < 10) {
-            statusText.innerHTML = `<div class="text-red-500 font-bold font-gaming text-xs animate-bounce">COINLAR YETARLI EMAS!</div>`;
+            statusText.innerHTML = `
+                <div class="flex items-center text-red-500 font-bold font-gaming text-xs tracking-wider animate-bounce">
+                    <span class="material-icons-outlined mr-1 text-sm">error</span>
+                    COINLAR YETARLI EMAS!
+                </div>`;
             return;
         }
 
@@ -78,11 +98,19 @@ if (openBtn) {
             const items = [
                 { name: "AK-47 | Redline", color: "text-red-500" },
                 { name: "M4A4 | Howl", color: "text-orange-500" },
-                { name: "AWP | Dragon Lore", color: "text-yellow-400" }
+                { name: "AWP | Dragon Lore", color: "text-yellow-400" },
+                { name: "Glock-18 | Fade", color: "text-purple-500" }
             ];
+            
             const win = items[Math.floor(Math.random() * items.length)];
             
-            statusText.innerHTML = `<span class="${win.color} font-gaming font-black text-sm uppercase">${win.name}</span>`;
+            statusText.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-gray-500 uppercase tracking-widest mb-1 font-bold">Yutdingiz:</span>
+                    <span class="${win.color} font-gaming font-black text-sm uppercase tracking-tighter">
+                        ${win.name}
+                    </span>
+                </div>`;
             
             totalOpenedCount++;
             openBtn.disabled = false;
@@ -91,7 +119,7 @@ if (openBtn) {
     });
 }
 
-// 6. Balansni to'ldirish
+// 7. Balansni to'ldirish
 if (topUpBtn) {
     topUpBtn.addEventListener('click', () => {
         balance += 100;
@@ -99,5 +127,5 @@ if (topUpBtn) {
     });
 }
 
-// Ilk yuklanganda UI ni chizish
+// Dasturni ilk bor yangilash
 updateUI();
