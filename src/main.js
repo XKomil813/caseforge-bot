@@ -1,9 +1,35 @@
-// Telegram WebApp API
-const tg = window.Telegram.WebApp;
-if (tg) {
-    tg.expand();
-    tg.ready();
+// Telegramdan foydalanuvchi ma'lumotlarini olish
+if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    const user = tg.initDataUnsafe.user;
+    document.getElementById('user-name').innerText = user.first_name || "Foydalanuvchi";
+    document.getElementById('user-id').innerText = `ID: ${user.id || "NOMA'LUM"}`;
 }
+
+// Statistika uchun o'zgaruvchi
+let totalOpenedCount = 0;
+
+// updateUI funksiyasini kengaytiramiz
+function updateUI() {
+    const displayVal = Math.floor(balance);
+    if (balanceDisplay) balanceDisplay.innerText = displayVal;
+    
+    // Profil qismidagi statistikani yangilash
+    const statsOpened = document.getElementById('stats-opened');
+    if (statsOpened) statsOpened.innerText = totalOpenedCount;
+}
+
+// openBtn bosilganda statistikani oshirish
+openBtn.addEventListener('click', () => {
+    if (balance >= 10) {
+        // ... (avvalgi kodlar: balans ayirish va h.k.)
+        
+        setTimeout(() => {
+            // ... (yutuqni ko'rsatish)
+            totalOpenedCount++; // Ochilgan keyslar sonini oshirish
+            updateUI();
+        }, 1500);
+    }
+});
 
 // O'zgaruvchilarni e'lon qilish
 let balance = 0;
@@ -21,22 +47,27 @@ function updateUI() {
     if (altBalance) altBalance.innerText = displayVal;
 }
 
-// Sahifalararo o'tish funksiyasi
 window.showSection = function(sectionId) {
-    // Hamma bo'limlarni yashirish
-    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    
-    // Tanlangan bo'limni ko'rsatish
-    const target = document.getElementById(sectionId + '-section');
-    if (target) target.classList.remove('hidden');
+    // 1. Hamma bo'limlarni (divlarni) yashirish
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(s => {
+        s.classList.add('hidden');
+    });
 
-    // Navigatsiya tugmalari rangini yangilash
-    document.querySelectorAll('nav button').forEach(btn => {
+    // 2. Tanlangan bo'limni ko'rsatish
+    const targetSection = document.getElementById(sectionId + '-section');
+    if (targetSection) {
+        targetSection.classList.remove('hidden');
+    }
+
+    // 3. Pastki menyu tugmalarining rangini to'g'rilash
+    const navButtons = document.querySelectorAll('nav button');
+    navButtons.forEach(btn => {
         btn.classList.remove('text-orange-500');
         btn.classList.add('text-gray-500');
     });
 
-    // Bosilgan tugmani rangini o'zgartirish
+    // 4. Bosilgan tugmani faol (to'q sariq) qilish
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('text-orange-500');
         event.currentTarget.classList.remove('text-gray-500');
