@@ -27,11 +27,6 @@
     
 
     <main class="max-w-md mx-auto px-5">
-        <div class="fixed bottom-20 left-0 right-0 text-center pointer-events-none">
-            <span class="text-[8px] text-gray-600 font-gaming tracking-widest uppercase opacity-50">
-                 v1.0.1
-            </span>
-        </div>
         <div id="home-section" class="section">
             <div class="glass border border-white/10 p-8 rounded-3xl shadow-2xl text-center">
                 
@@ -166,36 +161,40 @@
     </main>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-[#0d0f17]/95 border-t border-white/5 px-4 py-3 flex justify-between items-center z-50 backdrop-blur-xl">
-        <button onclick="showSection('home', 'this')" class="nav-btn flex flex-col items-center text-orange-500">
+        <button onclick="showSection('home', this)" class="nav-btn flex flex-col items-center text-orange-500">
             <span class="material-icons-outlined">home</span>
             <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">Asosiy</span>
         </button>
         
-        <button onclick="showSection('keys', 'this')" class="nav-btn flex flex-col items-center text-gray-500">
+        <button onclick="showSection('keys', this)" class="nav-btn flex flex-col items-center text-gray-500">
             <span class="material-icons-outlined">inventory_2</span>
             <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">Keyslar</span>
         </button>
         
-        <button onclick="showSection('games', 'this')" class="nav-btn flex flex-col items-center text-gray-500">
+        <button onclick="showSection('games', this)" class="nav-btn flex flex-col items-center text-gray-500">
             <span class="material-icons-outlined">sports_esports</span>
             <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">O'yinlar</span>
         </button>
 
-        <button onclick="showSection('friends', 'this')" class="nav-btn flex flex-col items-center text-gray-500">
+        <button onclick="showSection('friends', this)" class="nav-btn flex flex-col items-center text-gray-500">
             <span class="material-icons-outlined">people</span>
             <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">Do'stlar</span>
         </button>
         
-        <button onclick="showSection('inventory', 'this')" class="nav-btn flex flex-col items-center text-gray-500">
+        <button onclick="showSection('inventory', this)" class="nav-btn flex flex-col items-center text-gray-500">
             <span class="material-icons-outlined">shopping_bag</span>
             <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">Invertar</span>
         </button>
         
-        <button onclick="showSection('profile', 'this')" class="nav-btn flex flex-col items-center text-gray-500">
+        <button onclick="showSection('profile', this)" class="nav-btn flex flex-col items-center text-gray-500">
             <span class="material-icons-outlined">account_circle</span>
             <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">Profil</span>
         </button>
     </nav>
+
+    <div class="fixed bottom-20 left-0 right-0 text-center pointer-events-none">
+        <span class="text-[10px] text-gray-600 font-gaming opacity-30">v1.0.1</span>
+    </div>
 
     <script src="main.js"></script>
 </body>
