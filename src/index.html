@@ -27,30 +27,40 @@
 
     <main class="max-w-md mx-auto px-5">
         
-        <div id="home-section" class="section">
+          <div id="home-section" class="section">
             <div class="glass border border-white/10 p-8 rounded-3xl shadow-2xl text-center">
-                
                 <div class="flex flex-col items-center justify-center space-y-6">
-                    <div class="flex flex-col items-center">
-                        <span class="text-gray-500 font-bold uppercase tracking-[3px] text-[10px] mb-1">Sizning Balansingiz</span>
-                        <div class="flex items-center bg-gray-900/60 px-8 py-4 rounded-2xl border border-yellow-600/20 shadow-inner">
-                            <span id="balance-display" class="text-4xl font-bold font-gaming text-yellow-500 mr-2">0</span>
-                            <span class="material-icons-outlined text-yellow-500 text-3xl">monetization_on</span>
-                        </div>
                     </div>
 
-                    <button id="topUpBtn" class="flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 px-10 py-3.5 rounded-xl font-gaming font-bold text-xs tracking-widest shadow-lg active:scale-95 transition-all">
-                        <span class="material-icons-outlined text-sm">add_circle</span>
-                        <span>TO'LDIRISH</span>
+                <div class="mt-10 bg-gray-900/60 p-5 rounded-2xl border border-white/5 text-left">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Takliflar progressi</span>
+                        <span id="friends-count-text-home" class="text-blue-400 font-gaming text-[10px]">0/10</span>
+                    </div>
+                    <div class="w-full bg-gray-800 rounded-full h-1.5 flex space-x-1 p-[1.5px]">
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                        <div class="friend-seg-home h-full w-full bg-gray-700 rounded-sm transition-all duration-500"></div>
+                    </div>
+                    
+                    <button onclick="showSection('friends', document.querySelector('nav button:nth-child(4)'))" class="w-full mt-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl font-gaming font-bold text-[9px] tracking-[2px] transition-all uppercase text-blue-400">
+                        Batafsil ko'rish
                     </button>
                 </div>
 
-                <div class="mt-12 border-t border-white/5 pt-8 text-gray-500">
+                <div class="mt-8 border-t border-white/5 pt-6 text-gray-500">
                     <p class="font-gaming text-sm tracking-widest text-white/80 uppercase">Xush kelibsiz!</p>
-                    <p class="text-sm mt-2">Omadingizni sinab ko'rish uchun "Keyslar" bo'limiga o'ting.</p>
+                    <p class="text-xs mt-2 italic">Omadingizni sinab ko'rish uchun "Keyslar" bo'limiga o'ting.</p>
                 </div>
             </div>
-        </div>
+          </div>
 
         <div id="keys-section" class="section hidden">
             <div class="glass border border-white/10 p-8 rounded-3xl text-center">
@@ -75,6 +85,18 @@
 
         <div id="games-section" class="section hidden text-center p-10 text-gray-500">O'yinlar bo'limi yaqinda...</div>
         <div id="inventory-section" class="section hidden text-center p-10 text-gray-500">Invertar bo'limi yaqinda...</div>
+        <div id="friends-section" class="section hidden p-4">
+            <div class="glass border border-white/10 rounded-3xl p-6 shadow-2xl">
+                <h2 class="text-xl font-black font-gaming uppercase italic text-orange-500 mb-6 text-center">Do'stlarni taklif qilish</h2>
+                <div class="space-y-4">
+                    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[3px] border-l-2 border-orange-500 pl-2">Sizning do'stlaringiz</h3>
+                    <div id="friends-list" class="min-h-[100px] flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl py-8">
+                        <span class="material-icons-outlined text-gray-700 text-4xl mb-2">person_off</span>
+                        <p class="text-gray-600 text-xs font-bold uppercase tracking-widest">Hozircha hech kim yo'q</p>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="profile-section" class="section hidden p-4">
             <div class="glass border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                 <div class="bg-gradient-to-br from-orange-600/20 to-purple-600/20 p-8 text-center border-b border-white/5">
@@ -137,10 +159,15 @@
             <span class="material-icons-outlined">sports_esports</span>
             <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">O'yinlar</span>
         </button>
+
+        <button onclick="showSection('friends', 'this')" class="nav-btn flex flex-col items-center text-gray-500">
+            <span class="material-icons-outlined">people</span>
+            <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">Do'stlar</span>
+        </button>
         
         <button onclick="showSection('inventory', 'this')" class="nav-btn flex flex-col items-center text-gray-500">
             <span class="material-icons-outlined">shopping_bag</span>
-            <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">Sklad</span>
+            <span class="text-[9px] font-bold mt-1 uppercase font-gaming tracking-widest">Invertar</span>
         </button>
         
         <button onclick="showSection('profile', 'this')" class="nav-btn flex flex-col items-center text-gray-500">

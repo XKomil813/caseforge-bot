@@ -67,6 +67,38 @@ window.showSection = function(sectionId, element) {
         element.classList.remove('text-gray-500');
     }
 };
+// Do'stlar progressini yangilash (Home va Friends sahifalari uchun)
+function updateFriendsUI() {
+    const count = invitedFriends ? invitedFriends.length : 0;
+    
+    // 1. Friends sahifasidagi segmentlar
+    const segmentsFriends = document.querySelectorAll('.friend-seg');
+    if (segmentsFriends.length > 0) {
+        segmentsFriends.forEach((seg, index) => {
+            if (index < count) {
+                seg.classList.replace('bg-gray-700', 'bg-blue-500');
+                seg.classList.add('shadow-[0_0_8px_rgba(59,130,246,0.5)]');
+            }
+        });
+    }
+
+    // 2. Home sahifasidagi segmentlar (Yangi)
+    const segmentsHome = document.querySelectorAll('.friend-seg-home');
+    if (segmentsHome.length > 0) {
+        segmentsHome.forEach((seg, index) => {
+            if (index < count) {
+                seg.classList.replace('bg-gray-700', 'bg-blue-500');
+            }
+        });
+    }
+
+    // 3. Matnlarni yangilash
+    const homeCountText = document.getElementById('friends-count-text-home');
+    if (homeCountText) homeCountText.innerText = `${count}/10`;
+    
+    const friendsCountText = document.getElementById('friends-count-text');
+    if (friendsCountText) friendsCountText.innerText = `${count}/10`;
+}
 
 // 5. UI ni yangilash funksiyasi
 function updateUI() {
