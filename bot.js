@@ -1,17 +1,8 @@
-const http = require('http');
-// Render port xatosini bartaraf qilish uchun soxta server
-http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Bot is running');
-}).listen(process.env.PORT || 3000);
 require('dotenv').config();
 const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
-
-// --- SOZLAMALAR ---
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const WEBAPP_URL = process.env.BOT_WEBAPP_URL;
-const ADMIN_ID = 8446680998; // O'zingizning ID-ingizni tekshirib ko'ring
+const express = require('express');
+const cors = require('cors');
 
 // --- DATABASE ULANISHI ---
 mongoose.connect(process.env.MONGO_URI)
@@ -22,102 +13,65 @@ const UserSchema = new mongoose.Schema({
   telegramId: { type: Number, required: true, unique: true },
   username: String,
   coins: { type: Number, default: 0 },
-  referredBy: { type: Number, default: null },
-  inventory: { type: Array, default: [] }
+  totalOpened: { type: Number, default: 0 }
 });
 const User = mongoose.model('User', UserSchema);
 
-const bot = new Telegraf(BOT_TOKEN);
-bot.use(session());
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// --- ASOSIY START BUYRUG'I ---
-bot.start(async (ctx) => {
+// --- EXPRESS API (O'yin bilan bog'lanish uchun) ---
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Foydalanuvchi ma'lumotlarini olish API
+app.get('/api/user/:id', async (req, res) => {
   try {
-    const telegramId = ctx.from.id;
-    const inviterId = ctx.payload;
+    const user = await User.findOne({ telegramId: parseInt(req.params.id) });
+    if (user) res.json({ success: true, coins: user.coins, totalOpened: user.totalOpened });
+    else res.status(404).json({ success: false });
+  } catch (err) { res.status(500).json({ success: false }); }
+});
 
-    // 1. Avval foydalanuvchini qidiramiz
-    let user = await User.findOne({ telegramId });
-
-    // 2. Agar foydalanuvchi yo'q bo'lsa, keyin yaratamiz
-    if (!user) {
-      user = new User({
-        telegramId,
-        username: ctx.from.username || ctx.from.first_name,
-        coins: 0
-      });
-
-      // Referal tizimi
-      if (inviterId && !isNaN(inviterId) && parseInt(inviterId) !== telegramId) {
-        user.referredBy = parseInt(inviterId);
-        
-        // Taklif qilgan odamga 500 coin berish
-        await User.findOneAndUpdate(
-          { telegramId: parseInt(inviterId) },
-          { $inc: { coins: 500 } }
-        );
-        
-        try {
-          await bot.telegram.sendMessage(inviterId, ` Do'stingiz qo'shildi! Sizga 500 coin berildi.`);
-        } catch (e) { console.log("Referalga xabar yuborishda xato"); }
-      }
-      
+// Keys ochganda balansni kamaytirish API
+app.post('/api/open-case', async (req, res) => {
+  const { userId, cost } = req.body;
+  try {
+    const user = await User.findOne({ telegramId: parseInt(userId) });
+    if (user && user.coins >= cost) {
+      user.coins -= cost;
+      user.totalOpened += 1;
       await user.save();
-    }
-
-    // 3. Xabarni yuboramiz
-    const refLink = `https://t.me/${ctx.botInfo.username}?start=${telegramId}`;
-    await ctx.reply(
-      ` Salom, ${ctx.from.first_name}!\n\n` +
-      ` Balansingiz: ${user.coins} coin\n` +
-      ` Do'stlarni taklif qiling va 500 coin oling:\n${refLink}`,
-      Markup.inlineKeyboard([
-        [Markup.button.webApp(" CaseForge-ni ochish", process.env.BOT_WEBAPP_URL)]
-      ])
-    );
-
-  } catch (error) {
-    console.error("Start xatosi:", error);
-    ctx.reply("Kechirasiz, tizimda xatolik yuz berdi.");
-  }
-});
-
-// --- ADMIN PANEL (Balans to'ldirish) ---
-bot.command('admin', (ctx) => {
-  if (ctx.from.id !== ADMIN_ID) return ctx.reply("Siz admin emassiz!");
-  ctx.session = { step: 'get_id' };
-  ctx.reply("Admin: Foydalanuvchi ID-sini kiriting:");
-});
-
-bot.on('text', async (ctx) => {
-  if (ctx.from.id !== ADMIN_ID || !ctx.session) return;
-
-  if (ctx.session.step === 'get_id') {
-    ctx.session.targetId = ctx.message.text;
-    ctx.session.step = 'get_amount';
-    return ctx.reply(`ID ${ctx.session.targetId} uchun qancha coin qo'shmoqchisiz?`);
-  }
-
-  if (ctx.session.step === 'get_amount') {
-    const amount = parseInt(ctx.message.text);
-    if (isNaN(amount)) return ctx.reply("Faqat raqam yozing!");
-
-    const updated = await User.findOneAndUpdate(
-      { telegramId: parseInt(ctx.session.targetId) },
-      { $inc: { coins: amount } },
-      { new: true }
-    );
-
-    if (updated) {
-      ctx.reply(`✅ Tayyor! ${updated.username} balansiga ${amount} coin qo'shildi.\nJami: ${updated.coins}`);
-      try {
-        await bot.telegram.sendMessage(ctx.session.targetId, `🎁 Admin hisobingizni ${amount} coinga to'ldirdi!`);
-      } catch (e) {}
+      res.json({ success: true, newBalance: user.coins });
     } else {
-      ctx.reply("Foydalanuvchi topilmadi.");
+      res.status(400).json({ success: false, message: "Mablag' yetarli emas" });
     }
-    ctx.session = null;
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
-bot.launch().then(() => console.log("🚀 Bot Render-da muvaffaqiyatli ishga tushdi"));
+// --- TELEGRAM BOT QISMI ---
+bot.start(async (ctx) => {
+  const telegramId = ctx.from.id;
+  let user = await User.findOne({ telegramId });
+
+  if (!user) {
+    user = new User({
+      telegramId,
+      username: ctx.from.first_name,
+      coins: 100 // Yangi foydalanuvchiga bonus
+    });
+    await user.save();
+  }
+
+  ctx.reply(
+    `Salom ${ctx.from.first_name}!\nBalansingiz: ${user.coins} coin.`,
+    Markup.inlineKeyboard([
+      [Markup.button.webApp("CaseForge-ni ochish", process.env.BOT_WEBAPP_URL)]
+    ])
+  );
+});
+
+// Botni va API-ni birga yurgizish
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`API Server running on port ${PORT}`));
+bot.launch();
