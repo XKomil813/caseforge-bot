@@ -51,24 +51,32 @@ app.post('/api/open-case', async (req, res) => {
 
 // --- TELEGRAM BOT QISMI ---
 bot.start(async (ctx) => {
-  const telegramId = ctx.from.id;
-  let user = await User.findOne({ telegramId });
+  try {
+    const telegramId = ctx.from.id;
+    let user = await User.findOne({ telegramId });
 
-  if (!user) {
-    user = new User({
-      telegramId,
-      username: ctx.from.first_name,
-      coins: 100 // Yangi foydalanuvchiga bonus
-    });
-    await user.save();
+    if (!user) {
+      // Yangi foydalanuvchi yaratish
+      user = new User({
+        telegramId,
+        username: ctx.from.first_name || "O'yinchi",
+        coins: 500 // Bonus 500 coin
+      });
+      await user.save();
+      console.log(`Yangi foydalanuvchi saqlandi: ${telegramId}`);
+    }
+
+    // BU XABAR HAR DOIM CHIQISHI KERAK (if ichida emas, tashqarida)
+    return ctx.reply(
+      `Salom, ${ctx.from.first_name}!\n\n💰 Balansingiz: ${user.coins} coin.`,
+      Markup.inlineKeyboard([
+        [Markup.button.webApp("🎮 CaseForge-ni ochish", process.env.BOT_WEBAPP_URL)]
+      ])
+    );
+  } catch (error) {
+    console.error("Start xatosi:", error);
+    ctx.reply("Bot ishga tushishida xatolik yuz berdi.");
   }
-
-  ctx.reply(
-    `Salom ${ctx.from.first_name}!\nBalansingiz: ${user.coins} coin.`,
-    Markup.inlineKeyboard([
-      [Markup.button.webApp("CaseForge-ni ochish", process.env.BOT_WEBAPP_URL)]
-    ])
-  );
 });
 
 // Botni va API-ni birga yurgizish
