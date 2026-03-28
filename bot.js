@@ -34,6 +34,42 @@ app.get('/api/user/:id', async (req, res) => {
   else res.json({ success: false });
 });
 
+// Add logging to debug case opening issues
+app.post('/api/open-case', async (req, res) => {
+  const { userId, skin } = req.body;
+  const CASE_COST = 500; // cases.js dagi narx bilan bir xil
+
+  try {
+    console.log("Foydalanuvchi ID: ", userId);
+    console.log("Skin ma'lumotlari: ", skin);
+
+    const user = await User.findOne({ telegramId: userId });
+    if (!user) {
+      console.log("Foydalanuvchi topilmadi.");
+      return res.json({ success: false, message: "Foydalanuvchi topilmadi." });
+    }
+
+    console.log("Foydalanuvchi balans: ", user.coins);
+    console.log("Case narxi: ", CASE_COST);
+
+    if (user.coins < CASE_COST) {
+      console.log("Mablag' yetarli emas.");
+      return res.json({ success: false, message: "Mablag' kam!" });
+    }
+
+    user.coins -= CASE_COST;
+    user.totalOpened += 1;
+    user.inventory.push({ name: skin.name, price: skin.price });
+    await user.save();
+
+    console.log("Case ochildi. Yangi balans: ", user.coins);
+    res.json({ success: true, newBalance: user.coins });
+  } catch (e) {
+    console.error("Xatolik yuz berdi:", e);
+    res.status(500).json({ success: false, message: "Ichki server xatosi." });
+  }
+});
+
 // --- BOT ---
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.use(session());
