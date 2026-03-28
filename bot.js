@@ -1,7 +1,10 @@
+
 const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const CASES_DATA = require('./cases.js').CASES_DATA;
 
 const app = express();
 app.use(express.json());
@@ -36,12 +39,22 @@ app.get('/api/user/:id', async (req, res) => {
 
 // Add logging to debug case opening issues
 app.post('/api/open-case', async (req, res) => {
-  const { userId, skin } = req.body;
-  const CASE_COST = 500; // cases.js dagi narx bilan bir xil
+  const { userId } = req.body;
+  const CASE_COST = CASES_DATA.budget.price;
+
+  // Ehtimollik asosida random skin tanlash funksiyasi
+  function getRandomSkin(items) {
+    const totalChance = items.reduce((sum, item) => sum + item.chance, 0);
+    let rand = Math.random() * totalChance;
+    for (const item of items) {
+      if (rand < item.chance) return item;
+      rand -= item.chance;
+    }
+    return items[items.length - 1]; // fallback
+  }
 
   try {
     console.log("Foydalanuvchi ID: ", userId);
-    console.log("Skin ma'lumotlari: ", skin);
 
     const user = await User.findOne({ telegramId: userId });
     if (!user) {
@@ -57,19 +70,21 @@ app.post('/api/open-case', async (req, res) => {
       return res.json({ success: false, message: "Mablag' kam!" });
     }
 
+    // Random skin tanlash
+    const skinObj = getRandomSkin(CASES_DATA.budget.items);
+
     user.coins -= CASE_COST;
     user.totalOpened += 1;
-    // Agar skin kelmasa, default qiymat beriladi
-    const skinObj = skin && skin.name ? skin : { name: "AWP | Dragon Lore", price: 2000 };
     user.inventory.push({ name: skinObj.name, price: skinObj.price });
     await user.save();
 
-    console.log("Case ochildi. Yangi balans: ", user.coins);
-    res.json({ success: true, newBalance: user.coins });
+    console.log("Case ochildi. Yangi balans: ", user.coins, "Yutgan skin:", skinObj.name);
+    res.json({ success: true, newBalance: user.coins, skin: skinObj });
   } catch (e) {
     console.error("Xatolik yuz berdi:", e);
     res.status(500).json({ success: false, message: "Ichki server xatosi." });
   }
+  
 });
 
 // --- BOT ---
