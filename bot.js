@@ -74,7 +74,7 @@ bot.start(async (ctx) => {
     user = new User({ telegramId, username: ctx.from.first_name });
     await user.save();
   }
-  ctx.reply(`✨ CaseForge v1.0.4\n💰 Balans: ${user.coins} coin`,
+  ctx.reply(`✨ CaseForge v1.0.5\n💰 Balans: ${user.coins} coin`,
     Markup.inlineKeyboard([[Markup.button.webApp("🎮 O'yinni ochish", process.env.BOT_WEBAPP_URL)]])
   );
 });
