@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
 const express = require('express');
@@ -33,32 +32,6 @@ app.get('/api/user/:id', async (req, res) => {
   const user = await User.findOne({ telegramId: req.params.id });
   if (user) res.json({ success: true, coins: user.coins, totalOpened: user.totalOpened, inventory: user.inventory });
   else res.json({ success: false });
-});
-
-app.post('/api/open-case', async (req, res) => {
-  const { userId, skin } = req.body;
-  const CASE_COST = 500; // cases.js dagi narx bilan bir xil
-
-  try {
-    const user = await User.findOne({ telegramId: userId });
-    if (!user) {
-      return res.json({ success: false, message: "Foydalanuvchi topilmadi." });
-    }
-
-    if (user.coins < CASE_COST) {
-      return res.json({ success: false, message: "Mablag' kam!" });
-    }
-
-    user.coins -= CASE_COST;
-    user.totalOpened += 1;
-    user.inventory.push({ name: skin.name, price: skin.price });
-    await user.save();
-
-    res.json({ success: true, newBalance: user.coins });
-  } catch (e) {
-    console.error("Xatolik yuz berdi:", e);
-    res.status(500).json({ success: false, message: "Ichki server xatosi." });
-  }
 });
 
 // --- BOT ---
@@ -104,6 +77,17 @@ bot.on('text', async (ctx) => {
       bot.telegram.sendMessage(ctx.session.targetId, `🎁 Admin sizga ${amount} coin berdi!`);
     } else { ctx.reply("Foydalanuvchi topilmadi."); }
     ctx.session = null;
+  }
+});
+
+// Moved 'bot.command' to ensure proper initialization
+bot.command('checkbalance', async (ctx) => {
+  const telegramId = ctx.from.id;
+  const user = await User.findOne({ telegramId });
+  if (user) {
+    ctx.reply(`Sizning balansingiz: ${user.coins} coin`);
+  } else {
+    ctx.reply("Foydalanuvchi topilmadi.");
   }
 });
 
