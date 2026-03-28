@@ -11,6 +11,10 @@ const CASES_DATA = {
             { name: "Sticker | Cloud9 (Glitter)", price: 450, chance: 25, color: "text-blue-400", image: "https://i.imgur.com/cloud9-glitter.png" },
             { name: "Sticker | Mouz (Normal)", price: 150, chance: 35, color: "text-gray-400", image: "https://i.imgur.com/mouz-normal.png" }
         ]
-    },
-    // Kelajakda bu yerga 'premium' yoki 'weapon' keyslarini qo'shish mumkin
+    }
 };
+
+// BU QATOR JUDA MUHIM (Backend uchun)
+if (typeof module !== 'undefined') {
+    module.exports = { CASES_DATA };
+}

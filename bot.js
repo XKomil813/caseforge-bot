@@ -3,20 +3,7 @@ const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
-
-// Diqqat: cases.js fayli bot.js bilan bitta papkada bo'lishi kerak
-const CASES_DATA = {
-    budget: {
-        price: 500,
-        items: [
-            { name: "Sticker | Tyloo (Gold)", price: 3500, chance: 3, color: "text-yellow-400", image: "https://i.imgur.com/tyloo-gold.png" },
-            { name: "Sticker | Liquid (Holo)", price: 1200, chance: 12, color: "text-pink-500", image: "https://i.imgur.com/liquid-holo.png" },
-            { name: "Sticker | NAVI (Paper)", price: 600, chance: 25, color: "text-purple-500", image: "https://i.imgur.com/navi-paper.png" },
-            { name: "Sticker | Cloud9 (Glitter)", price: 450, chance: 25, color: "text-blue-400", image: "https://i.imgur.com/cloud9-glitter.png" },
-            { name: "Sticker | Mouz (Normal)", price: 150, chance: 35, color: "text-gray-400", image: "https://i.imgur.com/mouz-normal.png" }
-        ]
-    }
-};
+const { CASES_DATA } = require('./cases.js');
 
 const app = express();
 app.use(express.json());
@@ -34,7 +21,6 @@ const User = mongoose.model('User', new mongoose.Schema({
   inventory: [{ name: String, price: Number, date: { type: Date, default: Date.now } }]
 }));
 
-// Tasodifiy yutuq tanlash funksiyasi
 function getRandomSkin(items) {
     const rand = Math.random() * 100;
     let cumulative = 0;
@@ -54,24 +40,24 @@ app.get('/api/user/:id', async (req, res) => {
 });
 
 app.post('/api/open-case', async (req, res) => {
-  const { userId } = req.body;
-  const CASE_COST = CASES_DATA.budget.price;
+    const { userId } = req.body;
+    const CASE_COST = CASES_DATA.budget.price; // 500
 
-  try {
-    const user = await User.findOne({ telegramId: userId });
-    if (user && user.coins >= CASE_COST) {
-      const wonSkin = getRandomSkin(CASES_DATA.budget.items);
-      
-      user.coins -= CASE_COST;
-      user.totalOpened += 1;
-      user.inventory.push({ name: wonSkin.name, price: wonSkin.price });
-      
-      await user.save();
-      res.json({ success: true, newBalance: user.coins, skin: wonSkin });
-    } else {
-      res.json({ success: false, message: "Mablag' yetarli emas!" });
-    }
-  } catch (e) { res.status(500).json({ success: false }); }
+    try {
+        const user = await User.findOne({ telegramId: userId });
+        if (user && user.coins >= CASE_COST) {
+            const wonSkin = getRandomSkin(CASES_DATA.budget.items);
+            
+            user.coins -= CASE_COST;
+            user.totalOpened += 1;
+            user.inventory.push({ name: wonSkin.name, price: wonSkin.price });
+            await user.save();
+
+            res.json({ success: true, newBalance: user.coins, skin: wonSkin });
+        } else {
+            res.json({ success: false, message: "Mablag' kam!" });
+        }
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
