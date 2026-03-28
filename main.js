@@ -31,7 +31,8 @@ window.showSection = function(sectionId, element) {
     });
 
     // 2. Tanlangan bo'limni ko'rsatish
-    const target = document.getElementById(sectionId);
+    // sectionId oxiriga -section qo'shamiz (HTMLda id="home-section" ...)
+    const target = document.getElementById(sectionId.endsWith('-section') ? sectionId : sectionId + '-section');
     if (target) {
         target.classList.remove('hidden');
     }
