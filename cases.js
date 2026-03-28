@@ -1,20 +1,21 @@
 // cases.js
+
+const { stickers, graffiti, sticker_slabs, skins_not_grouped } = require('./collections.js');
+
 const CASES_DATA = {
     budget: {
         name: "Budget Case",
         price: 500,
         image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:AANd9GcRRPdSGg78g5WNQd_7sNsTbaXlrjT-rXBsmKg&s",
         items: [
-            { name: "Sticker | Tyloo (Gold)", price: 3500, chance: 3, color: "text-yellow-400", image: "https://i.imgur.com/tyloo-gold.png" },
-            { name: "Sticker | Liquid (Holo)", price: 1200, chance: 12, color: "text-pink-500", image: "https://i.imgur.com/liquid-holo.png" },
-            { name: "Sticker | NAVI (Paper)", price: 600, chance: 25, color: "text-purple-500", image: "https://i.imgur.com/navi-paper.png" },
-            { name: "Sticker | Cloud9 (Glitter)", price: 450, chance: 25, color: "text-blue-400", image: "https://i.imgur.com/cloud9-glitter.png" },
-            { name: "Sticker | Mouz (Normal)", price: 150, chance: 35, color: "text-gray-400", image: "https://i.imgur.com/mouz-normal.png" }
+            ...stickers,
+            ...graffiti,
+            ...sticker_slabs,
+            ...skins_not_grouped
         ]
     }
 };
 
-// BU QATOR JUDA MUHIM (Backend uchun)
 if (typeof module !== 'undefined') {
     module.exports = { CASES_DATA };
 }
