@@ -85,18 +85,36 @@ bot.command('admin', (ctx) => {
   ctx.reply("Foydalanuvchi ID yuboring:");
 });
 
+// bot.js ichidagi bot.on('text', ...) qismini mana bunga almashtiring:
 bot.on('text', async (ctx) => {
-  if (ctx.from.id !== ADMIN_ID || !ctx.session) return;
-  if (ctx.session.step === 'waiting_id') {
-    ctx.session.targetId = ctx.message.text;
-    ctx.session.step = 'waiting_amount';
-    ctx.reply("Qancha coin?");
-  } else if (ctx.session.step === 'waiting_amount') {
-    const amount = parseInt(ctx.message.text);
-    await User.findOneAndUpdate({ telegramId: ctx.session.targetId }, { $inc: { coins: amount } });
-    ctx.reply("Bajarildi!");
-    ctx.session = null;
+  // Faqat sessiyasi bor adminlar uchun ishlaydi
+  if (ctx.from.id === ADMIN_ID && ctx.session && (ctx.session.step === 'waiting_for_id' || ctx.session.step === 'waiting_for_amount')) {
+    if (ctx.session.step === 'waiting_for_id') {
+      ctx.session.targetId = ctx.message.text;
+      ctx.session.step = 'waiting_for_amount';
+      return ctx.reply(`ID ${ctx.session.targetId} uchun qancha coin bermoqchisiz?`);
+    }
+    
+    if (ctx.session.step === 'waiting_for_amount') {
+      const amount = parseInt(ctx.message.text);
+      if (isNaN(amount)) return ctx.reply("Faqat raqam yuboring!");
+      
+      const user = await User.findOne({ telegramId: ctx.session.targetId });
+      if (user) {
+        user.coins += amount;
+        await user.save();
+        ctx.reply("Bajarildi!");
+        bot.telegram.sendMessage(ctx.session.targetId, `🎁 Admin sizga ${amount} coin berdi!`);
+      } else { 
+        ctx.reply("Foydalanuvchi topilmadi."); 
+      }
+      ctx.session = null;
+      return;
+    }
   }
+  
+  // Oddiy foydalanuvchilar yoki sessiyasi yo'qlar uchun bu yerga tushadi
+  // Bu yerda hech narsa qilmaslik mumkin yoki umumiy javob qaytarish mumkin
 });
 
 const axios = require('axios');
