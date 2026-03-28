@@ -30,6 +30,9 @@ function getRandomSkin(items) {
     }
     return items[items.length - 1];
 }
+app.get('/', (req, res) => {
+  res.send('Server is running!');
+});
 
 app.get('/api/user/:id', async (req, res) => {
   try {
