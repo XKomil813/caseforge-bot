@@ -14,37 +14,29 @@ async function loadUserData() {
     } catch (e) { console.error(e); }
 }
 
-const openBtn = document.getElementById('openBtn');
-if (openBtn) {
-    openBtn.addEventListener('click', async () => {
-        const statusText = document.getElementById('status');
-        try {
-            openBtn.disabled = true;
-            statusText.innerHTML = '<span class="animate-spin">⌛</span>';
+// main.js ichida
+openBtn.addEventListener('click', async () => {
+    const statusText = document.getElementById('status');
+    try {
+        statusText.innerHTML = '<span class="animate-spin">⌛</span>';
+        const response = await fetch(`${RENDER_URL}/api/open-case`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId }) // Faqat ID yuboramiz
+        });
+        const data = await response.json();
 
-            const response = await fetch(`${RENDER_URL}/api/open-case`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: userId })
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                setTimeout(() => {
-                    document.getElementById('balance-display').innerText = data.newBalance;
-                    statusText.innerHTML = `<span class="${data.skin.color}">${data.skin.name} yutdingiz!</span>`;
-                    openBtn.disabled = false;
-                    loadUserData();
-                }, 1000);
-            } else {
-                statusText.innerText = data.message || "Xato!";
-                openBtn.disabled = false;
-            }
-        } catch (e) { 
-            statusText.innerText = "Server ulanish xatosi!"; 
-            openBtn.disabled = false;
+        if (data.success) {
+            document.getElementById('balance-display').innerText = data.newBalance;
+            // Serverdan kelgan skin ma'lumotini ko'rsatamiz
+            statusText.innerHTML = `
+                <img src="${data.skin.image}" class="inline w-10 h-10 mr-2"/>
+                <span class="${data.skin.color}">${data.skin.name} yutdingiz!</span>`;
+            loadUserData();
+        } else {
+            statusText.innerText = data.message;
         }
-    });
-}
+    } catch (e) { statusText.innerText = "Server xatosi!"; }
+});
 
 loadUserData();
