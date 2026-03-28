@@ -1,152 +1,115 @@
-
+require('dotenv').config();
 const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
-const CASES_DATA = require('./cases.js').CASES_DATA;
+
+// Diqqat: cases.js fayli bot.js bilan bitta papkada bo'lishi kerak
+const CASES_DATA = {
+    budget: {
+        price: 500,
+        items: [
+            { name: "Sticker | Tyloo (Gold)", price: 3500, chance: 3, color: "text-yellow-400", image: "https://i.imgur.com/tyloo-gold.png" },
+            { name: "Sticker | Liquid (Holo)", price: 1200, chance: 12, color: "text-pink-500", image: "https://i.imgur.com/liquid-holo.png" },
+            { name: "Sticker | NAVI (Paper)", price: 600, chance: 25, color: "text-purple-500", image: "https://i.imgur.com/navi-paper.png" },
+            { name: "Sticker | Cloud9 (Glitter)", price: 450, chance: 25, color: "text-blue-400", image: "https://i.imgur.com/cloud9-glitter.png" },
+            { name: "Sticker | Mouz (Normal)", price: 150, chance: 35, color: "text-gray-400", image: "https://i.imgur.com/mouz-normal.png" }
+        ]
+    }
+};
 
 const app = express();
 app.use(express.json());
 app.use(cors()); 
 
-// --- DATABASE ---
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB ulandi"))
   .catch(err => console.error("❌ MongoDB xatosi:", err));
 
-const UserSchema = new mongoose.Schema({
+const User = mongoose.model('User', new mongoose.Schema({
   telegramId: { type: Number, required: true, unique: true },
   username: String,
   coins: { type: Number, default: 500 },
   totalOpened: { type: Number, default: 0 },
-  inventory: [{
-    name: String,
-    price: Number,
-    date: { type: Date, default: Date.now }
-  }]
-});
-const User = mongoose.model('User', UserSchema);
+  inventory: [{ name: String, price: Number, date: { type: Date, default: Date.now } }]
+}));
 
-// --- API ---
-app.get('/', (req, res) => res.send('v1.0.4: CaseForge is Live! 🚀'));
+// Tasodifiy yutuq tanlash funksiyasi
+function getRandomSkin(items) {
+    const rand = Math.random() * 100;
+    let cumulative = 0;
+    for (const item of items) {
+        cumulative += item.chance;
+        if (rand < cumulative) return item;
+    }
+    return items[items.length - 1];
+}
 
 app.get('/api/user/:id', async (req, res) => {
-  const user = await User.findOne({ telegramId: req.params.id });
-  if (user) res.json({ success: true, coins: user.coins, totalOpened: user.totalOpened, inventory: user.inventory });
-  else res.json({ success: false });
+  try {
+    const user = await User.findOne({ telegramId: req.params.id });
+    if (user) res.json({ success: true, coins: user.coins, totalOpened: user.totalOpened });
+    else res.json({ success: false });
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// Add logging to debug case opening issues
 app.post('/api/open-case', async (req, res) => {
   const { userId } = req.body;
   const CASE_COST = CASES_DATA.budget.price;
 
-  // Ehtimollik asosida random skin tanlash funksiyasi
-  function getRandomSkin(items) {
-    const totalChance = items.reduce((sum, item) => sum + item.chance, 0);
-    let rand = Math.random() * totalChance;
-    for (const item of items) {
-      if (rand < item.chance) return item;
-      rand -= item.chance;
-    }
-    return items[items.length - 1]; // fallback
-  }
-
   try {
-    console.log("Foydalanuvchi ID: ", userId);
-
     const user = await User.findOne({ telegramId: userId });
-    if (!user) {
-      console.log("Foydalanuvchi topilmadi.");
-      return res.json({ success: false, message: "Foydalanuvchi topilmadi." });
+    if (user && user.coins >= CASE_COST) {
+      const wonSkin = getRandomSkin(CASES_DATA.budget.items);
+      
+      user.coins -= CASE_COST;
+      user.totalOpened += 1;
+      user.inventory.push({ name: wonSkin.name, price: wonSkin.price });
+      
+      await user.save();
+      res.json({ success: true, newBalance: user.coins, skin: wonSkin });
+    } else {
+      res.json({ success: false, message: "Mablag' yetarli emas!" });
     }
-
-    console.log("Foydalanuvchi balans: ", user.coins);
-    console.log("Case narxi: ", CASE_COST);
-
-    if (user.coins < CASE_COST) {
-      console.log("Mablag' yetarli emas.");
-      return res.json({ success: false, message: "Mablag' kam!" });
-    }
-
-    // Random skin tanlash
-    const skinObj = getRandomSkin(CASES_DATA.budget.items);
-
-    user.coins -= CASE_COST;
-    user.totalOpened += 1;
-    user.inventory.push({ name: skinObj.name, price: skinObj.price });
-    await user.save();
-
-    console.log("Case ochildi. Yangi balans: ", user.coins, "Yutgan skin:", skinObj.name);
-    res.json({ success: true, newBalance: user.coins, skin: skinObj });
-  } catch (e) {
-    console.error("Xatolik yuz berdi:", e);
-    res.status(500).json({ success: false, message: "Ichki server xatosi." });
-  }
-  
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// --- BOT ---
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.use(session());
 
-const ADMIN_ID = 8446680998; 
+const ADMIN_ID = 8446680998;
 
 bot.start(async (ctx) => {
-  const telegramId = ctx.from.id;
-  let user = await User.findOne({ telegramId });
-  if (!user) {
-    user = new User({ telegramId, username: ctx.from.first_name });
-    await user.save();
-  }
-  ctx.reply(`✨ CaseForge v1.0.6.1\n💰 Balans: ${user.coins} coin`,
+  const user = await User.findOneAndUpdate(
+    { telegramId: ctx.from.id },
+    { username: ctx.from.first_name },
+    { upsert: true, new: true }
+  );
+  ctx.reply(`✨ CaseForge v1.0.4\n💰 Balans: ${user.coins} coin`,
     Markup.inlineKeyboard([[Markup.button.webApp("🎮 O'yinni ochish", process.env.BOT_WEBAPP_URL)]])
   );
 });
 
-// Moved 'bot.command' to ensure proper initialization
 bot.command('admin', (ctx) => {
-  if (ctx.from.id !== ADMIN_ID) return ctx.reply(`Siz admin emassiz. ID: ${ctx.from.id}`);
-  ctx.session = { step: 'waiting_for_id' };
-  ctx.reply("Admin panel! Coin berish uchun foydalanuvchi ID-sini yuboring:");
+  if (ctx.from.id !== ADMIN_ID) return;
+  ctx.session = { step: 'waiting_id' };
+  ctx.reply("Foydalanuvchi ID yuboring:");
 });
 
 bot.on('text', async (ctx) => {
   if (ctx.from.id !== ADMIN_ID || !ctx.session) return;
-  if (ctx.session.step === 'waiting_for_id') {
+  if (ctx.session.step === 'waiting_id') {
     ctx.session.targetId = ctx.message.text;
-    ctx.session.step = 'waiting_for_amount';
-    return ctx.reply(`ID ${ctx.session.targetId} uchun qancha coin bermoqchisiz?`);
-  }
-  if (ctx.session.step === 'waiting_for_amount') {
+    ctx.session.step = 'waiting_amount';
+    ctx.reply("Qancha coin?");
+  } else if (ctx.session.step === 'waiting_amount') {
     const amount = parseInt(ctx.message.text);
-
-
-    
-    if (isNaN(amount)) return ctx.reply("Faqat raqam yuboring!");
-    const user = await User.findOne({ telegramId: ctx.session.targetId });
-    if (user) {
-      user.coins += amount;
-      await user.save();
-      ctx.reply("Bajarildi!");
-      bot.telegram.sendMessage(ctx.session.targetId, `🎁 Admin sizga ${amount} coin berdi!`);
-    } else { ctx.reply("Foydalanuvchi topilmadi."); }
+    await User.findOneAndUpdate({ telegramId: ctx.session.targetId }, { $inc: { coins: amount } });
+    ctx.reply("Bajarildi!");
     ctx.session = null;
   }
 });
 
-// Moved 'bot.command' to ensure proper initialization
-bot.command('checkbalance', async (ctx) => {
-  const telegramId = ctx.from.id;
-  const user = await User.findOne({ telegramId });
-  if (user) {
-    ctx.reply(`Sizning balansingiz: ${user.coins} coin`);
-  } else {
-    ctx.reply("Foydalanuvchi topilmadi.");
-  }
-});
-
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server yondi: ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
 bot.launch();
