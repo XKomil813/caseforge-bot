@@ -2,13 +2,12 @@ require('dotenv').config();
 const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
 const express = require('express');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(cors()); 
 
-// bot.js ichida
-const cors = require('cors');
-app.use(cors()); // Bu qator barcha ulanishlarga ruxsat beradi
 // --- DATABASE ---
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB ulandi"))
@@ -19,7 +18,6 @@ const UserSchema = new mongoose.Schema({
   username: String,
   coins: { type: Number, default: 500 },
   totalOpened: { type: Number, default: 0 },
-  // Invertar uchun yangi maydon
   inventory: [{
     name: String,
     price: Number,
@@ -29,72 +27,24 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 
 // --- API ---
-app.get('/', (req, res) => res.send('v1.0.2: Budget Case is active! 🚀'));
+app.get('/', (req, res) => res.send('v1.0.4: CaseForge is Live! 🚀'));
 
 app.get('/api/user/:id', async (req, res) => {
   const user = await User.findOne({ telegramId: req.params.id });
   if (user) res.json({ success: true, coins: user.coins, totalOpened: user.totalOpened, inventory: user.inventory });
   else res.json({ success: false });
 });
-// Admin ID-ni o'zgaruvchiga olamiz
-const ADMIN_ID = 8446680998; 
 
-bot.command('admin', (ctx) => {
-  if (ctx.from.id !== ADMIN_ID) {
-    return ctx.reply(`Siz admin emassiz. Sizning ID: ${ctx.from.id}`);
-  }
-  
-  ctx.session = { step: 'waiting_for_id' };
-  ctx.reply("Siz adminsiz! Coin berish uchun foydalanuvchi ID-sini yuboring:");
-});
-
-// Admin xabarlarini qayta ishlash
-bot.on('text', async (ctx) => {
-  if (ctx.from.id !== ADMIN_ID || !ctx.session) return;
-
-  if (ctx.session.step === 'waiting_for_id') {
-    ctx.session.targetId = ctx.message.text;
-    ctx.session.step = 'waiting_for_amount';
-    return ctx.reply(`ID ${ctx.session.targetId} uchun qancha coin bermoqchisiz?`);
-  }
-
-  if (ctx.session.step === 'waiting_for_amount') {
-    const amount = parseInt(ctx.message.text);
-    const targetId = ctx.session.targetId;
-
-    if (isNaN(amount)) return ctx.reply("Iltimos, faqat raqam yuboring!");
-
-    try {
-      const user = await User.findOne({ telegramId: targetId });
-      if (user) {
-        user.coins += amount;
-        await user.save();
-        ctx.reply(`Muvaffaqiyatli! Foydalanuvchi (ID: ${targetId}) balansiga ${amount} coin qo'shildi.`);
-        bot.telegram.sendMessage(targetId, `🎁 Admin tomonidan sizga ${amount} coin sovg'a qilindi!`);
-      } else {
-        ctx.reply("Bunday foydalanuvchi topilmadi.");
-      }
-    } catch (e) {
-      ctx.reply("Xatolik yuz berdi.");
-    }
-    ctx.session = null; // Sessiyani tozalash
-  }
-});
-
-// Keysni ochish API
 app.post('/api/open-case', async (req, res) => {
   const { userId, skin } = req.body;
-  const CASE_COST = 500;
+  const CASE_COST = 500; // cases.js dagi narx bilan bir xil
 
   try {
     const user = await User.findOne({ telegramId: userId });
     if (user && user.coins >= CASE_COST) {
       user.coins -= CASE_COST;
       user.totalOpened += 1;
-      
-      // Yutilgan narsani saqlash
       user.inventory.push({ name: skin.name, price: skin.price });
-      
       await user.save();
       res.json({ success: true, newBalance: user.coins });
     } else {
@@ -107,6 +57,8 @@ app.post('/api/open-case', async (req, res) => {
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.use(session());
 
+const ADMIN_ID = 8446680998; 
+
 bot.start(async (ctx) => {
   const telegramId = ctx.from.id;
   let user = await User.findOne({ telegramId });
@@ -114,11 +66,39 @@ bot.start(async (ctx) => {
     user = new User({ telegramId, username: ctx.from.first_name });
     await user.save();
   }
-  ctx.reply(`✨ CaseForge v1.0.2\n💰 Balans: ${user.coins} coin`,
+  ctx.reply(`✨ CaseForge v1.0.4\n💰 Balans: ${user.coins} coin`,
     Markup.inlineKeyboard([[Markup.button.webApp("🎮 O'yinni ochish", process.env.BOT_WEBAPP_URL)]])
   );
 });
 
+// Moved 'bot.command' to ensure proper initialization
+bot.command('admin', (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) return ctx.reply(`Siz admin emassiz. ID: ${ctx.from.id}`);
+  ctx.session = { step: 'waiting_for_id' };
+  ctx.reply("Admin panel! Coin berish uchun foydalanuvchi ID-sini yuboring:");
+});
+
+bot.on('text', async (ctx) => {
+  if (ctx.from.id !== ADMIN_ID || !ctx.session) return;
+  if (ctx.session.step === 'waiting_for_id') {
+    ctx.session.targetId = ctx.message.text;
+    ctx.session.step = 'waiting_for_amount';
+    return ctx.reply(`ID ${ctx.session.targetId} uchun qancha coin bermoqchisiz?`);
+  }
+  if (ctx.session.step === 'waiting_for_amount') {
+    const amount = parseInt(ctx.message.text);
+    if (isNaN(amount)) return ctx.reply("Faqat raqam yuboring!");
+    const user = await User.findOne({ telegramId: ctx.session.targetId });
+    if (user) {
+      user.coins += amount;
+      await user.save();
+      ctx.reply("Bajarildi!");
+      bot.telegram.sendMessage(ctx.session.targetId, `🎁 Admin sizga ${amount} coin berdi!`);
+    } else { ctx.reply("Foydalanuvchi topilmadi."); }
+    ctx.session = null;
+  }
+});
+
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server ${PORT}-portda yondi`));
+app.listen(PORT, "0.0.0.0", () => console.log(`Server yondi: ${PORT}`));
 bot.launch();

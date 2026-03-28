@@ -3,7 +3,7 @@ const CASES_DATA = {
     budget: {
         name: "Budget Case",
         price: 500,
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRPdSGg78g5WNQd_7sNsTbaXlrjT-rXBsmKg&s",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:AANd9GcRRPdSGg78g5WNQd_7sNsTbaXlrjT-rXBsmKg&s",
         items: [
             { name: "Sticker | Tyloo (Gold)", price: 3500, chance: 3, color: "text-yellow-400" },
             { name: "Sticker | Liquid (Holo)", price: 1200, chance: 12, color: "text-pink-500" },
