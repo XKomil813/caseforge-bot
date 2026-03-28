@@ -96,6 +96,15 @@ bot.on('text', async (ctx) => {
   }
 });
 
+const axios = require('axios');
+
+// Har 10 daqiqada serverni uyg'otib turadi
+setInterval(() => {
+  axios.get('https://caseforge-bot.onrender.com/')
+    .then(() => console.log('Self-ping muvaffaqiyatli!'))
+    .catch((err) => console.log('Self-ping xatosi:', err.message));
+}, 600000); // 600,000 ms = 10 daqiqa
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
 bot.launch();

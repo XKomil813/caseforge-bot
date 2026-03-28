@@ -3,15 +3,23 @@ const RENDER_URL = 'https://caseforge-bot.onrender.com';
 const userId = tg?.initDataUnsafe?.user?.id;
 
 async function loadUserData() {
-    if (!userId) return;
+    if (!userId) {
+        console.log("Foydalanuvchi ID topilmadi, Telegram ichida oching.");
+        return;
+    }
     try {
-        const res = await fetch(`${RENDER_URL}/api/user/${userId}`);
+        // Server "uyg'onishi" uchun timeoutni uzaytiramiz
+        const res = await fetch(`${RENDER_URL}/api/user/${userId}`, { 
+            signal: AbortSignal.timeout(10000) // 10 soniya kutish
+        });
         const data = await res.json();
         if (data.success) {
             document.getElementById('balance-display').innerText = data.coins;
             document.getElementById('stats-opened').innerText = data.totalOpened;
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.log("Server hali uyg'onmagan bo'lishi mumkin...");
+    }
 }
 
 // main.js boshida
