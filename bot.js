@@ -1,9 +1,9 @@
-require('dotenv').config();
 const { Telegraf, Markup, session } = require('telegraf');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
-const { CASES_DATA } = require('./cases.js');
+const https = require('https'); // Axios o'rniga standart modul
+const CASES_DATA = require('./cases.js').CASES_DATA;
 
 const app = express();
 app.use(express.json());
@@ -101,12 +101,14 @@ bot.on('text', async (ctx) => {
 
 const axios = require('axios');
 
-// Har 10 daqiqada serverni uyg'otib turadi
+// Har 10 daqiqada serverni uyg'otib turadi (Cron-job o'rniga ham ishlaydi)
 setInterval(() => {
-  axios.get('https://caseforge-bot.onrender.com/')
-    .then(() => console.log('Self-ping muvaffaqiyatli!'))
-    .catch((err) => console.log('Self-ping xatosi:', err.message));
-}, 600000); // 600,000 ms = 10 daqiqa
+  https.get(process.env.BOT_WEBAPP_URL, (res) => {
+    console.log('Self-ping muvaffaqiyatli: ' + res.statusCode);
+  }).on('error', (e) => {
+    console.error('Self-ping xatosi: ' + e.message);
+  });
+}, 600000);
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
