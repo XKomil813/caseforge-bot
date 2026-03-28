@@ -46,21 +46,22 @@ const openBtn = document.getElementById('openBtn');
 if (openBtn) {
     openBtn.addEventListener('click', async () => {
         const statusText = document.getElementById('status');
+        // Skin obyektini front-endda aniqlash (demo uchun statik qiymat)
+        const skin = { name: "AWP | Dragon Lore", price: 2000 };
         try {
             const response = await fetch(`${RENDER_URL}/api/open-case`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: userId, cost: 10 })
+                body: JSON.stringify({ userId: userId, skin: skin })
             });
             const data = await response.json();
 
             if (data.success) {
                 openBtn.disabled = true;
                 statusText.innerHTML = '<span class="material-icons-outlined animate-spin text-blue-400 text-3xl">sync</span>';
-                
                 setTimeout(() => {
                     document.getElementById('balance-display').innerText = data.newBalance;
-                    statusText.innerHTML = `<span class="text-yellow-400 font-gaming">AWP | Dragon Lore yutdingiz!</span>`;
+                    statusText.innerHTML = `<span class="text-yellow-400 font-gaming">${skin.name} yutdingiz!`;
                     openBtn.disabled = false;
                     loadUserData();
                 }, 1500);

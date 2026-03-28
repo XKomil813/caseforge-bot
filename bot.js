@@ -59,7 +59,9 @@ app.post('/api/open-case', async (req, res) => {
 
     user.coins -= CASE_COST;
     user.totalOpened += 1;
-    user.inventory.push({ name: skin.name, price: skin.price });
+    // Agar skin kelmasa, default qiymat beriladi
+    const skinObj = skin && skin.name ? skin : { name: "AWP | Dragon Lore", price: 2000 };
+    user.inventory.push({ name: skinObj.name, price: skinObj.price });
     await user.save();
 
     console.log("Case ochildi. Yangi balans: ", user.coins);
@@ -83,7 +85,7 @@ bot.start(async (ctx) => {
     user = new User({ telegramId, username: ctx.from.first_name });
     await user.save();
   }
-  ctx.reply(`✨ CaseForge v1.0.6\n💰 Balans: ${user.coins} coin`,
+  ctx.reply(`✨ CaseForge v1.0.6.1\n💰 Balans: ${user.coins} coin`,
     Markup.inlineKeyboard([[Markup.button.webApp("🎮 O'yinni ochish", process.env.BOT_WEBAPP_URL)]])
   );
 });
@@ -104,6 +106,9 @@ bot.on('text', async (ctx) => {
   }
   if (ctx.session.step === 'waiting_for_amount') {
     const amount = parseInt(ctx.message.text);
+
+
+    
     if (isNaN(amount)) return ctx.reply("Faqat raqam yuboring!");
     const user = await User.findOne({ telegramId: ctx.session.targetId });
     if (user) {
