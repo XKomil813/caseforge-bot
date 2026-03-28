@@ -41,16 +41,24 @@ app.post('/api/open-case', async (req, res) => {
 
   try {
     const user = await User.findOne({ telegramId: userId });
-    if (user && user.coins >= CASE_COST) {
-      user.coins -= CASE_COST;
-      user.totalOpened += 1;
-      user.inventory.push({ name: skin.name, price: skin.price });
-      await user.save();
-      res.json({ success: true, newBalance: user.coins });
-    } else {
-      res.json({ success: false, message: "Mablag' kam!" });
+    if (!user) {
+      return res.json({ success: false, message: "Foydalanuvchi topilmadi." });
     }
-  } catch (e) { res.status(500).json({ success: false }); }
+
+    if (user.coins < CASE_COST) {
+      return res.json({ success: false, message: "Mablag' kam!" });
+    }
+
+    user.coins -= CASE_COST;
+    user.totalOpened += 1;
+    user.inventory.push({ name: skin.name, price: skin.price });
+    await user.save();
+
+    res.json({ success: true, newBalance: user.coins });
+  } catch (e) {
+    console.error("Xatolik yuz berdi:", e);
+    res.status(500).json({ success: false, message: "Ichki server xatosi." });
+  }
 });
 
 // --- BOT ---
