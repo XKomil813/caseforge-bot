@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
 const https = require('https'); // Axios o'rniga standart modul
-const CASES_DATA = require('./cases.js').CASES_DATA;
+const { CASES_DATA } = require('./cases.js');
 
 const app = express();
 app.use(express.json());
