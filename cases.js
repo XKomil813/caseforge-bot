@@ -6,13 +6,7 @@ const CASES_DATA = {
     budget: {
         name: "Budget Case",
         price: 500,
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:AANd9GcRRPdSGg78g5WNQd_7sNsTbaXlrjT-rXBsmKg&s",
-        items: [
-            ...stickers,
-            ...graffiti,
-            ...sticker_slabs,
-            ...skins_not_grouped
-        ]
+        image: "/case-img/eco-case.png"
     }
 };
 
