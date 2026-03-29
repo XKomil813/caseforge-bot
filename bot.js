@@ -9,6 +9,13 @@ const app = express();
 app.use(express.json());
 app.use(cors()); 
 
+// bot.js tepasiga qo'shing
+const cors = require('cors');
+app.use(cors({
+    origin: '*', // Har qanday saytdan so'rovni qabul qiladi
+    methods: ['GET', 'POST']
+}));
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB ulandi"))
   .catch(err => console.error("❌ MongoDB xatosi:", err));
