@@ -42,25 +42,30 @@ app.get('/api/user/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// bot.js ichidagi qism
 app.post('/api/open-case', async (req, res) => {
-    const { userId } = req.body;
-    const CASE_COST = CASES_DATA.budget.price; // 500
-
     try {
+        const { userId, skin } = req.body;
         const user = await User.findOne({ telegramId: userId });
-        if (user && user.coins >= CASE_COST) {
-            const wonSkin = getRandomSkin(CASES_DATA.budget.items);
-            
-            user.coins -= CASE_COST;
-            user.totalOpened += 1;
-            user.inventory.push({ name: wonSkin.name, price: wonSkin.price });
-            await user.save();
 
-            res.json({ success: true, newBalance: user.coins, skin: wonSkin });
-        } else {
-            res.json({ success: false, message: "Mablag' kam!" });
+        if (!user || user.coins < CASES_DATA.eco.price) {
+            return res.json({ success: false, message: "Mablag' yetarli emas" });
         }
-    } catch (e) { res.status(500).json({ success: false }); }
+
+        // Balansni ayirish va skinni qo'shish
+        user.coins -= CASES_DATA.eco.price;
+        user.inventory.push(skin);
+        await user.save();
+
+        res.json({ 
+            success: true, 
+            newBalance: user.coins, 
+            wonSkin: skin 
+        });
+    } catch (error) {
+        console.error("Open Case Error:", error);
+        res.status(500).json({ success: false, error: "Server ichki xatosi" });
+    }
 });
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
