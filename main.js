@@ -61,50 +61,66 @@ async function openCase() {
 }
 
 function startRoulette(wonSkin) {
-    // To'g'ridan-to'g'ri ichki blokni ushlaymiz
     const itemsContainer = document.getElementById('roulette-items');
     const parentContainer = document.getElementById('roulette-container');
+    const openBtn = document.querySelector('button[onclick*="openCase"]'); // Tugmani topish
 
-    if (!itemsContainer) {
-        console.error("Xato: roulette-items topilmadi!");
-        return;
-    }
+    if (!itemsContainer || !parentContainer) return;
 
-    itemsContainer.innerHTML = ''; // Tozalash
+    // 1. Tayyorgarlik
+    itemsContainer.innerHTML = ''; 
     itemsContainer.style.transition = 'none';
     itemsContainer.style.left = '0px';
 
-    // Skinlarni yaratish (Har bir skin kengligi 112px bo'ladi)
+    // 2. Skinlar ro'yxatini olish (ECO case misolida)
     const itemsData = CASES_DATA['eco'].items;
-    const totalItems = 60;
-    const winningIndex = 50;
+    const totalItems = 60; // Ruletka uzunligi
+    const winningIndex = 50; // 50-chi skin yutuq bo'ladi
+    const itemWidth = 110; // Har bir skin eni 110px
 
+    // 3. Ruletkani skinlar bilan to'ldirish
     for (let i = 0; i < totalItems; i++) {
+        // Agar winningIndex bo'lsa yutgan skinni, bo'lmasa random skinni qo'yish
         const item = (i === winningIndex) ? wonSkin : itemsData[Math.floor(Math.random() * itemsData.length)];
         
         const div = document.createElement('div');
-        // w-28 = 112px, mx-1 = 4px + 4px = 8px. Jami bitta skin: 120px
-        div.className = "flex-shrink-0 w-28 h-28 mx-1 bg-white/5 rounded-2xl border-b-4 flex flex-col items-center justify-center p-2";
-        div.style.borderColor = (item.price > 10) ? '#eb4b4b' : (item.price > 2 ? '#4b69ff' : '#b0c3d9');
+        div.className = "flex-shrink-0 w-[110px] h-28 mx-1 bg-white/5 rounded-xl border-b-4 flex flex-col items-center justify-center p-2 transition-all";
+        
+        // Rarity rangini aniqlash
+        let color = item.price > 10 ? '#eb4b4b' : (item.price > 2 ? '#4b69ff' : '#b0c3d9');
+        div.style.borderColor = color;
         
         div.innerHTML = `
-            <img src="${item.image}" class="w-16 h-16 object-contain">
-            <span class="text-[7px] mt-2 text-center text-white/70">${item.name}</span>
+            <img src="${item.image}" class="w-16 h-16 object-contain drop-shadow-lg">
+            <span class="text-[7px] mt-2 text-white/50 font-bold text-center truncate w-full">${item.name}</span>
         `;
         itemsContainer.appendChild(div);
     }
 
-    // Animatsiya (setTimeout bilan kechiktirib ishga tushiramiz)
+    // 4. Animatsiyani boshlash (Biroz kechikish bilan)
     setTimeout(() => {
-        const itemFullWidth = 120; // 112px + 8px margin
         const parentWidth = parentContainer.offsetWidth;
+        const fullItemWidth = 110 + 8; // width + (mx-1 x 2)
         
-        // Markazlashtirish formulasi
-        const targetOffset = (winningIndex * itemFullWidth) - (parentWidth / 2) + (itemFullWidth / 2);
+        // Markazlashtirish formulasi:
+        // (Index * eni) - (Konteyner yarmi) + (Item yarmi)
+        const targetOffset = (winningIndex * fullItemWidth) - (parentWidth / 2) + (fullItemWidth / 2);
         
-        itemsContainer.style.transition = 'left 5s cubic-bezier(0.15, 0, 0.05, 1)';
+        itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
         itemsContainer.style.left = `-${targetOffset}px`;
-    }, 100);
+    }, 50);
+
+    // 5. Natijani ko'rsatish
+    setTimeout(() => {
+        const statusText = document.querySelector('.text-green-400')?.parentElement;
+        if (statusText) {
+            statusText.innerHTML = `
+                <span class="text-green-400 font-black text-[12px] animate-pulse">TABRIKLAYMIZ!</span>
+                <span class="text-[10px] text-white font-bold block">${wonSkin.name}</span>
+            `;
+        }
+        if (openBtn) openBtn.disabled = false;
+    }, 5500);
 }
 
 // 4. VAZIFALAR (STREAK) MANTIQLARI
