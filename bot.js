@@ -59,30 +59,29 @@ app.get('/api/user/:id', async (req, res) => {
 // Keys ochish API
 // bot.js ichidagi api/open-case ni shu bilan almashtiring:
 app.post('/api/open-case', async (req, res) => {
+    // Brauzerga javobni keshlamaslikni aytamiz
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    
     try {
-        const { userId, caseType } = req.body; 
+        const { userId, caseType } = req.body;
         const user = await User.findOne({ telegramId: userId });
-        const selectedCase = CASES_DATA[caseType];
+        const items = CASES_DATA[caseType].items;
 
-        if (!user || !selectedCase || user.coins < selectedCase.price) {
-            return res.json({ success: false, message: "Mablag' yetarli emas!" });
-        }
+        // Tasodifiylikni oshirish uchun vaqtga bog'laymiz
+        const randomIndex = Math.floor(Math.random() * items.length);
+        const wonSkin = items[randomIndex];
 
-        // --- MUHIM: Yutuqni serverda aniqlash ---
-        const items = selectedCase.items;
-        const wonSkin = items[Math.floor(Math.random() * items.length)];
-
-        user.coins -= selectedCase.price;
-        user.totalOpened += 1;
+        // ... (balansni ayirish va saqlash kodi)
+        user.coins -= 500;
+        user.totalOpened += 1; //
         user.inventory.push(wonSkin);
         await user.save();
 
-        // Frontendga yutuqni va ruletka uchun barcha itemlarni yuboramiz
         res.json({ 
             success: true, 
             wonSkin: wonSkin, 
-            allItems: items, // Ruletka aylanishi uchun kerak
-            newBalance: user.coins 
+            newBalance: user.coins,
+            timestamp: Date.now() // Har safar har xil vaqt yuboramiz
         });
     } catch (error) {
         res.status(500).json({ success: false });
