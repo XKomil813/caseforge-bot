@@ -125,14 +125,23 @@ let timerStartTime = parseInt(localStorage.getItem('timerStart')) || 0;
 
 const rewards = [20, 50, 80, 120, 150, 180, 200];
 
-// 1. Modalni ochish/yopish
 function openTaskModal() {
-    document.getElementById('taskModal').classList.remove('hidden');
-    document.getElementById('taskModal').classList.add('flex');
+    const modal = document.getElementById('taskModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex'); // Markazda chiqishi uchun flex qo'shiladi
+        modal.style.display = 'flex'; // Ba'zan Tailwind classlari bilan muammo bo'lsa, bu yordam beradi
+    } else {
+        console.error("taskModal ID-li element topilmadi!");
+    }
 }
 
 function closeTaskModal() {
-    document.getElementById('taskModal').classList.add('hidden');
+    const modal = document.getElementById('taskModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
 }
 
 // 2. Havolani nusxalash
