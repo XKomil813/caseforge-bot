@@ -254,6 +254,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Mukofotlar jadvali (7 kunlik)
+const nameRewards = [20, 50, 80, 120, 150, 180, 200]; 
+
+function updateNameUI() {
+    const btn = document.getElementById('name-reward-btn');
+    const statusText = document.getElementById('name-status-text');
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    // Mukofot miqdorini aniqlash (7-kundan keyin 200 tadan ketaveradi)
+    const currentDayIndex = Math.min(nameStreak, 6);
+    const rewardAmount = nameRewards[currentDayIndex];
+
+    if (nameTimerStart !== 0 && (now - nameTimerStart >= oneDay)) {
+        btn.innerText = "OLISH 🪙";
+        btn.classList.replace('bg-blue-600', 'bg-green-600');
+        btn.disabled = false;
+    } else {
+        btn.innerText = `+${rewardAmount} 🪙`;
+        btn.classList.add('bg-blue-600');
+        btn.disabled = false;
+    }
+
+    if(statusText) statusText.innerText = `${Math.min(nameStreak, 7)}/7 Kun • Streak: ${nameStreak}`;
+
+    // Progress bar segmentlari (7 ta segment)
+    const progress = document.getElementById('name-streak-progress');
+    if (progress) {
+        progress.innerHTML = '';
+        for (let i = 0; i < 7; i++) {
+            const div = document.createElement('div');
+            // Agar streak 7 dan oshsa ham hamma chiziqlar yoniq turadi
+            div.className = `flex-1 h-full rounded-full ${i < nameStreak ? 'bg-blue-500 shadow-[0_0_5px_#3b82f6]' : 'bg-gray-800'}`;
+            progress.appendChild(div);
+        }
+    }
+}
+
 // Hodisani bog'lash
 if (openBtn) openBtn.addEventListener('click', openCase);
 
