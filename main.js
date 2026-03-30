@@ -1,13 +1,11 @@
 const tg = window.Telegram ? window.Telegram.WebApp : null;
 const RENDER_URL = 'https://caseforge-bot.onrender.com';
 const userId = tg?.initDataUnsafe?.user?.id;
-const userFirstName = tg?.initDataUnsafe?.user?.first_name || "Foydalanuvchi";
 
-// Ma'lumotlarni yozish
-if (userId) {
-    document.getElementById('user-name').innerText = userFirstName;
-    document.getElementById('user-id').innerText = `ID: ${userId}`;
-}
+// Ruletka sozlamalari
+const rouletteContainer = document.getElementById('roulette-container');
+const openBtn = document.getElementById('openBtn');
+const statusText = document.getElementById('status');
 
 async function loadUserData() {
     if (!userId) return;
@@ -17,30 +15,63 @@ async function loadUserData() {
         if (data.success) {
             document.getElementById('balance-display').innerText = data.coins.toFixed(0);
             document.getElementById('stats-opened').innerText = data.totalOpened;
+            if(document.getElementById('user-name')) document.getElementById('user-name').innerText = data.username || "Foydalanuvchi";
         }
-    } catch (e) { console.log("Ma'lumot yangilashda xato."); }
+    } catch (e) { console.error("Xato: Ma'lumot yuklanmadi"); }
 }
 
-window.showSection = function(sectionId, element) {
-    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(sectionId).classList.remove('hidden');
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('text-orange-500');
-        btn.classList.add('text-gray-500');
-    });
-    if (element) element.classList.add('text-orange-500');
-    loadUserData();
-};
+function startRoulette(wonSkin) {
+    // 1. Tayyorgarlik
+    const items = CASES_DATA['eco'].items; // cases.js dan barcha skinlarni olamiz
+    rouletteContainer.innerHTML = '';
+    rouletteContainer.style.transition = 'none';
+    rouletteContainer.style.left = '0px';
 
-// RULETKA MANTIQI
-const rouletteContainer = document.getElementById('roulette-container');
-const openBtn = document.getElementById('openBtn');
+    const totalItems = 60; // Ruletka uzunligi
+    const winningIndex = 50; // Yutuq nechanchi bo'lib to'xtashi
+    const itemWidth = 110; // Har bir skinning kengligi + margin
 
-async function openCaseRequest() {
-    if (!userId) return alert("Faqat Telegramda ishlaydi!");
+    // 2. Ruletka ichini skinlar bilan to'ldirish
+    for (let i = 0; i < totalItems; i++) {
+        const item = (i === winningIndex) ? wonSkin : items[Math.floor(Math.random() * items.length)];
+        
+        const div = document.createElement('div');
+        div.className = "min-w-[100px] h-28 mx-1.5 bg-white/5 rounded-xl border-b-4 flex flex-col items-center justify-center p-2";
+        div.style.borderColor = getRarityColor(item.price); // Narxiga qarab rang berish
+        
+        div.innerHTML = `
+            <img src="${item.image}" class="w-16 h-16 object-contain drop-shadow-md">
+            <span class="text-[7px] mt-2 text-center font-gaming truncate w-full px-1 opacity-70">${item.name}</span>
+        `;
+        rouletteContainer.appendChild(div);
+    }
+
+    // 3. Animatsiyani boshlash
+    setTimeout(() => {
+        const viewportWidth = rouletteContainer.parentElement.offsetWidth;
+        const targetOffset = (winningIndex * itemWidth) - (viewportWidth / 2) + (itemWidth / 2);
+        
+        rouletteContainer.style.transition = 'left 5s cubic-bezier(0.15, 0, 0.05, 1)';
+        rouletteContainer.style.left = `-${targetOffset}px`;
+    }, 50);
+
+    // 4. Natijani ko'rsatish
+    setTimeout(() => {
+        statusText.innerHTML = `
+            <div class="animate-bounce flex flex-col items-center">
+                <span class="text-green-400 font-black">TABRIKLAYMIZ!</span>
+                <span class="text-[9px] text-white/60">${wonSkin.name}</span>
+            </div>`;
+        openBtn.disabled = false;
+        loadUserData(); // Balansni yangilash
+    }, 5500);
+}
+
+async function openCase() {
+    if (!userId) return;
     
-    const statusText = document.getElementById('status');
-    statusText.innerHTML = '<span class="text-blue-400 animate-pulse text-xs">ALOQA O\'RNATILMOQDA...</span>';
+    statusText.innerHTML = '<span class="text-blue-400 animate-pulse">SERVER BILAN ALOQA...</span>';
+    openBtn.disabled = true;
 
     try {
         const response = await fetch(`${RENDER_URL}/api/open-case`, {
@@ -51,59 +82,37 @@ async function openCaseRequest() {
         const data = await response.json();
 
         if (data.success) {
-            // Serverdan hamma itemlar va yutilgan skin kelishi kerak
-            // Agar bot.js da allItems yubormayotgan bo'lsangiz, cases.js dan olamiz
-            const allItems = CASES_DATA['eco'].items;
-            startRoulette(allItems, data.wonSkin);
-            openBtn.disabled = true; // Takroriy bosishni o'chirish
+            startRoulette(data.wonSkin);
         } else {
-            statusText.innerHTML = `<span class="text-red-500 text-xs">${data.message}</span>`;
+            statusText.innerHTML = `<span class="text-red-500">${data.message}</span>`;
+            openBtn.disabled = false;
         }
     } catch (e) {
-        statusText.innerHTML = '<span class="text-red-500 text-xs">SERVER XATOSI!</span>';
-    }
-}
-
-function startRoulette(items, wonSkin) {
-    rouletteContainer.innerHTML = '';
-    rouletteContainer.style.transition = 'none';
-    rouletteContainer.style.left = '0px';
-
-    const totalItems = 50; // Jami aylanadigan elementlar
-    const winningIndex = 40; // Yutuq nechanchi bo'lib chiqishi (ruletka oxiriga yaqin)
-    const itemWidth = 110; // 100px rasm + 10px margin
-
-    for (let i = 0; i < totalItems; i++) {
-        // Agar winningIndex bo'lsa, server bergan skinni qo'yamiz, aks holda tasodifiy
-        const item = (i === winningIndex) ? wonSkin : items[Math.floor(Math.random() * items.length)];
-        
-        const div = document.createElement('div');
-        div.className = "roulette-item";
-        div.innerHTML = `
-            <img src="${item.image}" class="w-12 h-12 object-contain">
-            <span class="text-[7px] mt-1 text-center px-1 truncate w-full uppercase">${item.name}</span>
-        `;
-        rouletteContainer.appendChild(div);
-    }
-
-    // Animatsiya
-    setTimeout(() => {
-        // O'rtaga to'xtatish uchun hisoblash
-        const viewportWidth = document.querySelector('.relative.w-full.overflow-hidden').offsetWidth;
-        const targetOffset = (winningIndex * itemWidth) - (viewportWidth / 2) + (itemWidth / 2);
-        
-        rouletteContainer.style.transition = 'left 5s cubic-bezier(0.15, 0, 0.05, 1)';
-        rouletteContainer.style.left = `-${targetOffset}px`;
-    }, 50);
-
-    // Yutuqni e'lon qilish
-    setTimeout(() => {
-        document.getElementById('status').innerHTML = `
-            <span class="text-green-400 font-bold animate-bounce text-sm">YUTUQ: ${wonSkin.name}</span>`;
+        statusText.innerHTML = '<span class="text-red-500">ALOQA XATOSI</span>';
         openBtn.disabled = false;
-        loadUserData();
-    }, 5500);
+    }
 }
 
-if (openBtn) openBtn.addEventListener('click', openCaseRequest);
+// Narxga qarab rang qaytaruvchi yordamchi funksiya
+function getRarityColor(price) {
+    if (price > 10) return '#eb4b4b'; // Qizil
+    if (price > 5) return '#d32ee6';  // Binafsha
+    if (price > 1) return '#4b69ff';  // Ko'k
+    return '#b0c3d9';                 // Kulrang
+}
+
+// Navigatsiya funksiyasi (Sizniki kabi)
+window.showSection = function(sectionId, element) {
+    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(sectionId).classList.remove('hidden');
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-orange-500');
+        btn.classList.add('text-gray-500');
+    });
+    if (element) element.classList.add('text-orange-500');
+    if (sectionId === 'inventory-section') loadInventory(); // Inventarni yuklash
+};
+
+// Start
+openBtn.addEventListener('click', openCase);
 loadUserData();
