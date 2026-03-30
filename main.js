@@ -44,6 +44,20 @@ function startRoulette(wonSkin) {
             <span class="text-[7px] mt-2 text-center font-gaming truncate w-full px-1 opacity-70">${item.name}</span>
         `;
         rouletteContainer.appendChild(div);
+    
+        setTimeout(() => {
+            // MUHIM: Bu yerda aynan serverdan kelgan wonSkin ob'ektidan foydalanamiz
+            statusText.innerHTML = `
+                <div class="animate-bounce flex flex-col items-center">
+                    <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
+                    <span class="text-[10px] text-white/90 font-bold uppercase tracking-tighter text-center px-4">
+                        ${wonSkin.name} 
+                    </span>
+                </div>`;
+            
+            openBtn.disabled = false;
+            loadUserData(); // Balansni yangilash
+        }, 5500);
     }
 
     // 3. Animatsiyani boshlash
