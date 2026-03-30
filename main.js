@@ -5,6 +5,7 @@ const userId = tg?.initDataUnsafe?.user?.id || "64537281"; // Test uchun ID
 
 // ELEMENTLAR
 const rouletteContainer = document.getElementById('roulette-container');
+const rouletteItems = document.getElementById('roulette-items');
 const openBtn = document.getElementById('openBtn');
 const statusText = document.getElementById('status');
 
@@ -59,34 +60,77 @@ async function openCase() {
     }
 }
 
+// RULETKA MANTIQI (To'g'rilangan va aniq variant)
 function startRoulette(wonSkin) {
-    const items = CASES_DATA['eco'].items; 
-    rouletteContainer.innerHTML = '';
-    rouletteContainer.style.transition = 'none';
-    rouletteContainer.style.left = '0px';
+    // 1. Elementlarni tayyorlash
+    const rouletteItems = rouletteContainer.querySelector('.items'); // Agar HTMLda alohida .items bo'lmasa, rouletteContainer'ni o'zidan foydalanish
+    const containerToPopulate = rouletteItems || rouletteContainer; // Orqaga moslik uchun
 
-    const winningIndex = 50; 
-    const itemWidth = 110; 
+    containerToPopulate.innerHTML = '';
+    containerToPopulate.style.transition = 'none'; // Animatsiyani o'chirib, boshiga qaytaramiz
+    containerToPopulate.style.left = '0px';
 
-    for (let i = 0; i < 60; i++) {
-        const item = (i === winningIndex) ? wonSkin : items[Math.floor(Math.random() * items.length)];
+    // 2. Ruletka itemlarini yaratish (CASES_DATA eco keysidan foydalanildi)
+    const itemsData = CASES_DATA['eco'].items; 
+    const totalItems = 60; // 60 ta item yaratamiz, oxirrog'ida o'ynab to'xtaydi
+    const winningIndex = 50; // Aynan server yutgan skinga o'tadigan item indeksi
+
+    for (let i = 0; i < totalItems; i++) {
+        // winningIndexga serverdan kelgan skinni, qolganlariga tasodifiy skinlarni qo'yamiz
+        const item = (i === winningIndex) ? wonSkin : itemsData[Math.floor(Math.random() * itemsData.length)];
+        
         const div = document.createElement('div');
-        div.className = "min-w-[100px] h-28 mx-1.5 bg-white/5 rounded-xl border-b-4 flex flex-col items-center justify-center p-2";
-        div.style.borderColor = item.price > 10 ? '#eb4b4b' : (item.price > 2 ? '#4b69ff' : '#b0c3d9');
-        div.innerHTML = `<img src="${item.image}" class="w-16 h-16 object-contain"><span class="text-[7px] mt-2 text-center font-gaming truncate w-full opacity-70">${item.name}</span>`;
-        rouletteContainer.appendChild(div);
+        // Item dizayni (Sizda orqa fon, ramka va rasm bor)
+        div.className = "item flex-shrink-0 w-28 h-28 mx-1.5 bg-white/5 rounded-2xl border-b-4 flex flex-col items-center justify-center p-2 box-border";
+        
+        // Narxiga qarab ramka rangi (Agar price'ga asoslangan mantiq ishlamayotgan bo'lsa, CASES_DATA rarity'dan foydalanish)
+        let borderColor = '#b0c3d9'; // Default rang (Oqimtir)
+        if (item.price > 10) borderColor = '#eb4b4b'; // Qizil (Covert)
+        else if (item.price > 2) borderColor = '#4b69ff'; // Moviy (Classified)
+        
+        div.style.borderColor = borderColor;
+        
+        div.innerHTML = `
+            <img src="${item.image}" class="w-16 h-16 object-contain">
+            <span class="text-[7px] mt-2 text-center font-gaming truncate w-full px-1 opacity-70 tracking-tight">${item.name}</span>
+        `;
+        containerToPopulate.appendChild(div);
     }
 
+    // 3. ANIMATSIYA HISOBI (Aniq markazga to'xtatish)
     setTimeout(() => {
-        const targetOffset = (winningIndex * itemWidth) - (rouletteContainer.parentElement.offsetWidth / 2) + (itemWidth / 2);
-        rouletteContainer.style.transition = 'left 5s cubic-bezier(0.15, 0, 0.05, 1)';
-        rouletteContainer.style.left = `-${targetOffset}px`;
+        // Parent konteynerning enini olamiz, chunki qizil chiziq uning markazida turadi
+        const parentWidth = rouletteContainer.parentElement.offsetWidth;
+        const itemWidth = containerToPopulate.firstElementChild.offsetWidth; // mx-1.5 qo'shilmagan box width
+        const fullItemWidth = itemWidth + 12; // 12px margin-x (mx-1.5 = 6px * 2)
+
+        // Asosiy formula: Parent markazidan item markazigacha masofa
+        // To'liq itemlar enini winningIndexgacha hisoblab, keyin chiziqni o'rtaga tushirish uchun orqaga suramiz
+        const targetOffset = (winningIndex * fullItemWidth) - (parentWidth / 2) + (fullItemWidth / 2);
+        
+        // Bitta item ichida tasodifiy joyda to'xtash (O'yin effektini kuchaytirish uchun)
+        const randomOffsetWithinItem = Math.floor(Math.random() * (itemWidth - 20)) + 10; // 10px chekka beramiz
+        const finalOffset = targetOffset + (randomOffsetWithinItem - (fullItemWidth / 2));
+        
+        // CSS animatsiyani yoqish (transition=5s kabi)
+        containerToPopulate.style.transition = 'left 5s cubic-bezier(0.15, 0, 0.05, 1)';
+        containerToPopulate.style.left = `-${targetOffset}px`; // randomOffset yo'q versiyasi ham aniq o'rtada to'xtaydi
     }, 50);
 
+    // 4. NATIJANI KORSATISH (5.5 soniyadan keyin)
     setTimeout(() => {
-        statusText.innerHTML = `<div class="animate-bounce flex flex-col items-center"><span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span><span class="text-[10px] text-white/90 font-bold uppercase">${wonSkin.name}</span></div>`;
+        // Yutuq matni (Faqat serverdan kelgan wonSkin'dan foydalanildi, o'zgarmaydi)
+        statusText.innerHTML = `
+            <div class="animate-bounce flex flex-col items-center">
+                <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
+                <span class="text-[10px] text-white/90 font-bold uppercase text-center tracking-tighter">
+                    ${wonSkin.name}
+                </span
+            </div>`;
+        
+        // Tugmani qayta yoqish
         openBtn.disabled = false;
-        loadUserData();
+        loadUserData(); // Pulni yangilash
     }, 5500);
 }
 
@@ -189,6 +233,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const refDisplay = document.getElementById('display-ref-link');
     if(refDisplay) refDisplay.innerText = `t.me/CaseForgeUZBot?start=${userId}`;
 });
+// Har bir do'st uchun 500 coin berish mantiqi
+function updateBalance(friendsCount) {
+    const rewardPerFriend = 500; // Miqdor: 500 coin
+    const totalEarnedFromFriends = friendsCount * rewardPerFriend;
+
+    // 1. Do'stlar bo'limidagi "Jami do'stlar" sonini yangilash
+    const totalFriendsElem = document.getElementById('total-friends');
+    if (totalFriendsElem) {
+        totalFriendsElem.innerText = friendsCount;
+    }
+
+    // 2. Do'stlar bo'limidagi "Sizning foydangiz" (500 dan hisoblaganda)
+    const totalEarnedElem = document.getElementById('total-earned');
+    if (totalEarnedElem) {
+        totalEarnedElem.innerText = totalEarnedFromFriends + " 🪙";
+    }
+
+    // 3. ASOSIY BALANSNI YANGILASH (Tepadagi katta raqam)
+    // Diqqat: Bu yerda 'balance-display' ID-li element bo'lishi shart
+    const mainBalanceElem = document.getElementById('balance-display');
+    if (mainBalanceElem) {
+        // Hozirgi balansni olib, unga do'stlardan kelgan pulni qo'shish mantiqi
+        // (Agar bazadan kelayotgan bo'lsa, to'g'ridan-to'g'ri o'shani yozasiz)
+        mainBalanceElem.innerText = totalEarnedFromFriends; 
+    }
+    
+    console.log("Balans yangilandi: " + totalEarnedFromFriends + " coin");
+}
 
 // MODAL FUNKSIYALARI
 window.openTaskModal = () => document.getElementById('taskModal')?.classList.remove('hidden');
