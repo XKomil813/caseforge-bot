@@ -78,37 +78,32 @@ function startRoulette(wonSkin) {
     const winningIndex = 50; // 50-chi skin yutuq bo'ladi
     const itemWidth = 110; // Har bir skin eni 110px
 
-    // 3. Ruletkani skinlar bilan to'ldirish
+    // startRoulette funksiyasi ichidagi skin yaratish qismi:
     for (let i = 0; i < totalItems; i++) {
-        // Agar winningIndex bo'lsa yutgan skinni, bo'lmasa random skinni qo'yish
         const item = (i === winningIndex) ? wonSkin : itemsData[Math.floor(Math.random() * itemsData.length)];
         
         const div = document.createElement('div');
-        div.className = "flex-shrink-0 w-[110px] h-28 mx-1 bg-white/5 rounded-xl border-b-4 flex flex-col items-center justify-center p-2 transition-all";
+        // 'w-24' va 'h-24' o'lchamini bir oz kichraytirdik, shunda sig'ishi oson bo'ladi
+        div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
         
-        // Rarity rangini aniqlash
         let color = item.price > 10 ? '#eb4b4b' : (item.price > 2 ? '#4b69ff' : '#b0c3d9');
         div.style.borderColor = color;
         
         div.innerHTML = `
-            <img src="${item.image}" class="w-16 h-16 object-contain drop-shadow-lg">
-            <span class="text-[7px] mt-2 text-white/50 font-bold text-center truncate w-full">${item.name}</span>
+            <img src="${item.image}" class="w-14 h-14 object-contain mb-1">
+            <p class="text-[6px] text-white/40 font-bold uppercase truncate w-full text-center">${item.name}</p>
         `;
         itemsContainer.appendChild(div);
     }
 
-    // 4. Animatsiyani boshlash (Biroz kechikish bilan)
     setTimeout(() => {
-        const parentWidth = parentContainer.offsetWidth;
-        const fullItemWidth = 110 + 8; // width + (mx-1 x 2)
-        
-        // Markazlashtirish formulasi:
-        // (Index * eni) - (Konteyner yarmi) + (Item yarmi)
-        const targetOffset = (winningIndex * fullItemWidth) - (parentWidth / 2) + (fullItemWidth / 2);
-        
-        itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
-        itemsContainer.style.left = `-${targetOffset}px`;
-    }, 50);
+    const itemFullWidth = 112; 
+    const parentWidth = parentContainer.offsetWidth;
+    const targetOffset = (winningIndex * itemFullWidth) - (parentWidth / 2) + (itemFullWidth / 2);
+    
+    itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
+    itemsContainer.style.left = `-${targetOffset}px`;
+}, 50);
 
     // 5. Natijani ko'rsatish
     setTimeout(() => {
