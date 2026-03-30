@@ -249,14 +249,52 @@
                 </div>
             </div>
         </div>
-        <div id="friends-section" class="section hidden p-4">
-            <div class="glass border border-white/10 rounded-3xl p-6 shadow-2xl">
-                <h2 class="text-xl font-black font-gaming uppercase italic text-orange-500 mb-6 text-center">Do'stlarni taklif qilish</h2>
-                <div class="space-y-4">
-                    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[3px] border-l-2 border-orange-500 pl-2">Sizning do'stlaringiz</h3>
-                    <div id="friends-list" class="min-h-[100px] flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl py-8">
-                        <span class="material-icons-outlined text-gray-700 text-4xl mb-2">person_off</span>
-                        <p class="text-gray-600 text-xs font-bold uppercase tracking-widest">Hozircha hech kim yo'q</p>
+        <div id="friends-section" class="hidden animate-fade-in px-4 pb-20">
+            <div class="text-center mb-8 mt-6">
+                <h2 class="text-2xl font-black font-gaming italic uppercase tracking-tighter text-white">Do'stlarni taklif qil</h2>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Har bir faol do'st uchun mukofot oling</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-white/10 rounded-[32px] p-6 mb-6 backdrop-blur-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Sening havolang</p>
+                        <p id="display-ref-link" class="text-xs text-white/60 mt-1 font-mono truncate w-40">t.me/CaseForgeBot?start=...</p>
+                    </div>
+                    <button onclick="copyRefLink()" class="bg-white text-black px-5 py-2.5 rounded-2xl text-[10px] font-black font-gaming uppercase active:scale-90 transition-all shadow-xl">
+                        Nusxa
+                    </button>
+                </div>
+                
+                <button onclick="shareToTelegram()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl uppercase tracking-widest shadow-lg shadow-blue-900/40 transition-all active:scale-95 flex items-center justify-center space-x-2">
+                    <span class="material-icons-outlined text-sm">share</span>
+                    <span>Do'stlarni chaqirish</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-8">
+                <div class="bg-[#11141d] border border-white/5 p-4 rounded-3xl text-center">
+                    <p class="text-[9px] text-gray-500 uppercase font-bold">Jami do'stlar</p>
+                    <p id="total-friends" class="text-xl font-black text-white mt-1">0</p>
+                </div>
+                <div class="bg-[#11141d] border border-white/5 p-4 rounded-3xl text-center">
+                    <p class="text-[9px] text-gray-500 uppercase font-bold">Jami daromad</p>
+                    <p id="total-earned" class="text-xl font-black text-yellow-500 mt-1">0 🪙</p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between px-2 mb-2">
+                    <h4 class="text-[11px] font-black font-gaming uppercase text-white tracking-widest">Sening do'stlaring</h4>
+                    <span class="text-[10px] text-gray-500 italic">Oxirgi 10 tasi</span>
+                </div>
+
+                <div id="friends-list" class="space-y-2">
+                    <div class="py-10 text-center bg-[#11141d]/40 rounded-[32px] border border-dashed border-white/5">
+                        <div class="text-gray-600 mb-2">
+                            <span class="material-icons-outlined text-4xl">group_off</span>
+                        </div>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold">Hozircha hech kim yo'q</p>
                     </div>
                 </div>
             </div>
