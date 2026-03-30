@@ -2,11 +2,12 @@ const tg = window.Telegram ? window.Telegram.WebApp : null;
 const RENDER_URL = 'https://caseforge-bot.onrender.com';
 const userId = tg?.initDataUnsafe?.user?.id;
 
-// Ruletka sozlamalari
+// Elementlarni olish
 const rouletteContainer = document.getElementById('roulette-container');
 const openBtn = document.getElementById('openBtn');
 const statusText = document.getElementById('status');
 
+// Foydalanuvchi ma'lumotlarini yangilash
 async function loadUserData() {
     if (!userId) return;
     try {
@@ -15,52 +16,45 @@ async function loadUserData() {
         if (data.success) {
             document.getElementById('balance-display').innerText = data.coins.toFixed(0);
             document.getElementById('stats-opened').innerText = data.totalOpened;
-            if(document.getElementById('user-name')) document.getElementById('user-name').innerText = data.username || "Foydalanuvchi";
+            if(document.getElementById('user-name')) {
+                document.getElementById('user-name').innerText = data.username || "Foydalanuvchi";
+            }
         }
-    } catch (e) { console.error("Xato: Ma'lumot yuklanmadi"); }
+    } catch (e) { console.error("Yuklashda xato"); }
 }
 
+// RULETKA MANTIQI
 function startRoulette(wonSkin) {
-    // 1. Tayyorgarlik
-    const items = CASES_DATA['eco'].items; // cases.js dan barcha skinlarni olamiz
+    // cases.js dan barcha itemlarni olish
+    const items = CASES_DATA['eco'].items; 
+    
     rouletteContainer.innerHTML = '';
     rouletteContainer.style.transition = 'none';
     rouletteContainer.style.left = '0px';
 
-    const totalItems = 60; // Ruletka uzunligi
-    const winningIndex = 50; // Yutuq nechanchi bo'lib to'xtashi
-    const itemWidth = 110; // Har bir skinning kengligi + margin
+    const totalItems = 60; 
+    const winningIndex = 50; 
+    const itemWidth = 110; 
 
-    // 2. Ruletka ichini skinlar bilan to'ldirish
     for (let i = 0; i < totalItems; i++) {
+        // Har safar boshqa itemlarni tasodifiy aralashtiramiz
         const item = (i === winningIndex) ? wonSkin : items[Math.floor(Math.random() * items.length)];
         
         const div = document.createElement('div');
         div.className = "min-w-[100px] h-28 mx-1.5 bg-white/5 rounded-xl border-b-4 flex flex-col items-center justify-center p-2";
-        div.style.borderColor = getRarityColor(item.price); // Narxiga qarab rang berish
+        
+        // Narxiga qarab rang berish
+        const borderColor = item.price > 10 ? '#eb4b4b' : (item.price > 2 ? '#4b69ff' : '#b0c3d9');
+        div.style.borderColor = borderColor;
         
         div.innerHTML = `
-            <img src="${item.image}" class="w-16 h-16 object-contain drop-shadow-md">
+            <img src="${item.image}" class="w-16 h-16 object-contain">
             <span class="text-[7px] mt-2 text-center font-gaming truncate w-full px-1 opacity-70">${item.name}</span>
         `;
         rouletteContainer.appendChild(div);
-    
-        setTimeout(() => {
-            // MUHIM: Bu yerda aynan serverdan kelgan wonSkin ob'ektidan foydalanamiz
-            statusText.innerHTML = `
-                <div class="animate-bounce flex flex-col items-center">
-                    <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
-                    <span class="text-[10px] text-white/90 font-bold uppercase tracking-tighter text-center px-4">
-                        ${wonSkin.name} 
-                    </span>
-                </div>`;
-            
-            openBtn.disabled = false;
-            loadUserData(); // Balansni yangilash
-        }, 5500);
     }
 
-    // 3. Animatsiyani boshlash
+    // Animatsiyani boshlash
     setTimeout(() => {
         const viewportWidth = rouletteContainer.parentElement.offsetWidth;
         const targetOffset = (winningIndex * itemWidth) - (viewportWidth / 2) + (itemWidth / 2);
@@ -69,26 +63,32 @@ function startRoulette(wonSkin) {
         rouletteContainer.style.left = `-${targetOffset}px`;
     }, 50);
 
-    // 4. Natijani ko'rsatish
+    // Natijani ko'rsatish (Ruletka to'xtaganda)
     setTimeout(() => {
+        // MUHIM: Aynan serverdan kelgan wonSkin nomini chiqaramiz
         statusText.innerHTML = `
             <div class="animate-bounce flex flex-col items-center">
-                <span class="text-green-400 font-black">TABRIKLAYMIZ!</span>
-                <span class="text-[9px] text-white/60">${wonSkin.name}</span>
+                <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
+                <span class="text-[10px] text-white/90 font-bold uppercase text-center tracking-tighter">
+                    ${wonSkin.name}
+                </span>
             </div>`;
         openBtn.disabled = false;
-        loadUserData(); // Balansni yangilash
+        loadUserData();
     }, 5500);
 }
 
+// ASOSIY FUNKSIYA (openBtn shuni chaqiradi)
 async function openCase() {
     if (!userId) return;
     
-    statusText.innerHTML = '<span class="text-blue-400 animate-pulse">SERVER BILAN ALOQA...</span>';
+    // Eski natijani tozalash
+    statusText.innerHTML = '<span class="text-blue-400 animate-pulse text-[10px]">KEYSNI OCHILMOQDA...</span>';
     openBtn.disabled = true;
 
     try {
-        const response = await fetch(`${RENDER_URL}/api/open-case`, {
+        // Cache bo'lib qolmasligi uchun URL oxiriga vaqtni qo'shamiz
+        const response = await fetch(`${RENDER_URL}/api/open-case?t=${Date.now()}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: userId, caseType: 'eco' })
@@ -98,24 +98,16 @@ async function openCase() {
         if (data.success) {
             startRoulette(data.wonSkin);
         } else {
-            statusText.innerHTML = `<span class="text-red-500">${data.message}</span>`;
+            statusText.innerHTML = `<span class="text-red-500 text-[10px]">${data.message}</span>`;
             openBtn.disabled = false;
         }
     } catch (e) {
-        statusText.innerHTML = '<span class="text-red-500">ALOQA XATOSI</span>';
+        statusText.innerHTML = '<span class="text-red-500 text-[10px]">ALOQA XATOSI</span>';
         openBtn.disabled = false;
     }
 }
 
-// Narxga qarab rang qaytaruvchi yordamchi funksiya
-function getRarityColor(price) {
-    if (price > 10) return '#eb4b4b'; // Qizil
-    if (price > 5) return '#d32ee6';  // Binafsha
-    if (price > 1) return '#4b69ff';  // Ko'k
-    return '#b0c3d9';                 // Kulrang
-}
-
-// Navigatsiya funksiyasi (Sizniki kabi)
+// Navigatsiya
 window.showSection = function(sectionId, element) {
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
     document.getElementById(sectionId).classList.remove('hidden');
@@ -124,9 +116,11 @@ window.showSection = function(sectionId, element) {
         btn.classList.add('text-gray-500');
     });
     if (element) element.classList.add('text-orange-500');
-    if (sectionId === 'inventory-section') loadInventory(); // Inventarni yuklash
+    loadUserData();
 };
 
-// Start
-openBtn.addEventListener('click', openCase);
+// Hodisani bog'lash
+if (openBtn) openBtn.addEventListener('click', openCase);
+
+// Birinchi marta yuklash
 loadUserData();
