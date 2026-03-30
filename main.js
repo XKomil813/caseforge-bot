@@ -119,61 +119,131 @@ window.showSection = function(sectionId, element) {
     loadUserData();
 };
 
-let taskData = {
-    bioStatus: false, // Bio-da havola bormi?
-    currentStreak: 0, // Necha kun ketma-ket kirgan
-    lastEntryDate: null, // Oxirgi kirgan sanasi
-    rewards: [20, 50, 80, 120, 150, 180, 200] // Kunlik mukofotlar jadvali
-};
+let streak = parseInt(localStorage.getItem('userStreak')) || 0;
+let lastClaimTime = parseInt(localStorage.getItem('lastClaim')) || 0;
+let timerStartTime = parseInt(localStorage.getItem('timerStart')) || 0;
 
-function calculateTaskStatus() {
-    const now = new Date();
-    if (!taskData.lastEntryDate) {
-        taskData.currentStreak = 0;
+const rewards = [20, 50, 80, 120, 150, 180, 200];
+
+// 1. Modalni ochish/yopish
+function openTaskModal() {
+    document.getElementById('taskModal').classList.remove('hidden');
+    document.getElementById('taskModal').classList.add('flex');
+}
+
+function closeTaskModal() {
+    document.getElementById('taskModal').classList.add('hidden');
+}
+
+// 2. Havolani nusxalash
+function copyRefLink() {
+    const link = `https://t.me/CaseForgeUZBot?start=${userId}`;
+    navigator.clipboard.writeText(link);
+    alert("Havola nusxalandi! Endi biongizga joylashtiring.");
+}
+
+// 3. ASOSIY TUGMA BOSILGANDA
+function handleRewardClick() {
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const threeDays = 3 * 24 * 60 * 60 * 1000;
+
+    // 3 kundan ko'p kirmasa streakni nolga tushirish
+    if (lastClaimTime !== 0 && (now - lastClaimTime > threeDays)) {
+        streak = 0;
+        localStorage.setItem('userStreak', 0);
+    }
+
+    if (timerStartTime === 0) {
+        // BIRINCHI MARTA BOSILGANDA: Timerni boshlash
+        timerStartTime = now;
+        localStorage.setItem('timerStart', timerStartTime);
+        startVisualTimer(oneDay);
+        alert("Tekshirish boshlandi! 24 soatdan keyin mukofotni olishingiz mumkin.");
+    } else if (now - timerStartTime < oneDay) {
+        // TIMER HALI TUGAMAGAN BO'LSA
+        const timeLeft = oneDay - (now - timerStartTime);
+        alert(`Iltimos kuting, hali ${Math.floor(timeLeft / 3600000)} soat bor.`);
     } else {
-        const lastDate = new Date(taskData.lastEntryDate);
-        const diffTime = Math.abs(now - lastDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // 24 SOAT O'TDI: Mukofotni berish
+        claimReward();
+    }
+}
 
-        if (diffDays > 3) {
-            // 3 kundan ko'p kirmasa - 0 dan boshlanadi
-            taskData.currentStreak = 0;
-        } else if (diffDays === 1) {
-            // Har kuni kirsa streak oshadi
-            taskData.currentStreak++;
+function claimReward() {
+    streak++;
+    lastClaimTime = Date.now();
+    timerStartTime = 0; // Timerni qayta tiklash (keyingi kun uchun)
+    
+    localStorage.setItem('lastClaim', lastClaimTime);
+    localStorage.setItem('userStreak', streak);
+    localStorage.setItem('timerStart', 0);
+    
+    updateUI();
+    alert(`Tabriklaymiz! Bugungi mukofot: +${rewards[Math.min(streak - 1, 6)]} 🪙 qo'shildi!`);
+}
+
+function startVisualTimer(duration) {
+    const btn = document.getElementById('reward-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    
+    const interval = setInterval(() => {
+        const now = Date.now();
+        const timeLeft = duration - (now - timerStartTime);
+        
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            updateUI(); // Tugmani "Mukofotni olish" holatiga qaytaradi
+            return;
+        }
+
+        const hours = Math.floor(timeLeft / 3600000);
+        const mins = Math.floor((timeLeft % 3600000) / 60000);
+        const secs = Math.floor((timeLeft % 60000) / 1000);
+        
+        btn.innerText = `${hours}:${mins}:${secs}`;
+        btn.classList.replace('bg-blue-600', 'bg-gray-700');
+    }, 1000);
+}
+
+function updateUI() {
+    const btn = document.getElementById('reward-btn');
+    if (!btn) return;
+
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    if (timerStartTime !== 0 && (now - timerStartTime >= oneDay)) {
+        btn.innerText = "OLISH 🪙";
+        btn.classList.replace('bg-gray-700', 'bg-green-600');
+        btn.disabled = false;
+    } else {
+        const reward = rewards[Math.min(streak, 6)];
+        btn.innerText = `+${reward} 🪙`;
+        btn.classList.add('bg-blue-600');
+        btn.disabled = false;
+    }
+
+    // Progress bar
+    const progress = document.getElementById('streak-progress');
+    if (progress) {
+        progress.innerHTML = '';
+        for (let i = 0; i < 10; i++) {
+            const div = document.createElement('div');
+            div.className = `flex-1 h-full rounded-full ${i < streak ? 'bg-blue-500 shadow-[0_0_5px_#3b82f6]' : 'bg-gray-800'}`;
+            progress.appendChild(div);
         }
     }
 }
 
-function updateTasksUI() {
-    const container = document.getElementById('tasks-container');
-    if (!container) return;
-
-    // Streak bo'yicha mukofotni aniqlash
-    const dayIndex = taskData.currentStreak >= 7 ? 6 : taskData.currentStreak;
-    const currentReward = taskData.rewards[dayIndex];
-
-    // HTML-ni qayta shakllantirish (0 kundan boshlangan holat)
-    container.innerHTML = `
-        <div class="bg-[#11141d] border border-white/5 p-4 rounded-2xl flex flex-col group">
-            <div class="flex justify-between items-start mb-3">
-                <div class="flex-1">
-                    <p class="text-[11px] font-black font-gaming uppercase text-white tracking-tight">Bio-da referal havolasi</p>
-                    <p class="text-[9px] text-gray-500 mt-1">${taskData.currentStreak}/7 Kun • Bugungi: +${currentReward} 🪙</p>
-                </div>
-                <button class="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-4 py-2 rounded-xl text-[10px] font-black font-gaming uppercase">
-                    Tekshirish
-                </button>
-            </div>
-            
-            <div class="flex space-x-1 h-1 w-full">
-                ${Array.from({length: 10}).map((_, i) => `
-                    <div class="flex-1 ${i < taskData.currentStreak ? 'bg-blue-500' : 'bg-gray-800'} rounded-full"></div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
+document.addEventListener('DOMContentLoaded', () => {
+    updateUI();
+    const now = Date.now();
+    if (timerStartTime !== 0 && (now - timerStartTime < 24 * 60 * 60 * 1000)) {
+        startVisualTimer(24 * 60 * 60 * 1000);
+    }
+});
 
 // Hodisani bog'lash
 if (openBtn) openBtn.addEventListener('click', openCase);
