@@ -2,7 +2,7 @@ const CASES_DATA = {
     // 1-KEYS: ECO CASE (0.10 $ dan arzonlar)
     eco: {
         name: "Eco Case",
-        price: 10, // Keys ochish narxi (coin)
+        price: 500, // Keys ochish narxi (coin)
         items: [
             // --- 20 TA ARZON STIKERLAR ---
             { name: "Sticker | Team Spirit | Austin 2025", price: 0.03, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMu0JinHtwM655f9-Be_GUrymM-3qiNe7fD3OPBpcqTCXD-SlLwhtrlvHXHqlkkh42rdmdepbzvJOY6xuzgr/62fx62f", chance: 5 },

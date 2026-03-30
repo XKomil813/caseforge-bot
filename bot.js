@@ -57,43 +57,35 @@ app.get('/api/user/:id', async (req, res) => {
 });
 
 // Keys ochish API
+// bot.js ichidagi api/open-case ni shu bilan almashtiring:
 app.post('/api/open-case', async (req, res) => {
     try {
-        const { userId, caseType, wonSkin } = req.body; 
-        
-        if (!userId || !caseType || !wonSkin) {
-            return res.json({ success: false, message: "Ma'lumotlar to'liq emas!" });
-        }
-
-        const user = await User.findOne({ telegramId: parseInt(userId) });
+        const { userId, caseType } = req.body; 
+        const user = await User.findOne({ telegramId: userId });
         const selectedCase = CASES_DATA[caseType];
 
-        if (!user) return res.json({ success: false, message: "Foydalanuvchi topilmadi!" });
-        if (!selectedCase) return res.json({ success: false, message: "Keys topilmadi!" });
-        
-        if (user.coins < selectedCase.price) {
+        if (!user || !selectedCase || user.coins < selectedCase.price) {
             return res.json({ success: false, message: "Mablag' yetarli emas!" });
         }
 
-        // Balansni ayirish va inventarga qo'shish
+        // --- MUHIM: Yutuqni serverda aniqlash ---
+        const items = selectedCase.items;
+        const wonSkin = items[Math.floor(Math.random() * items.length)];
+
         user.coins -= selectedCase.price;
         user.totalOpened += 1;
-        user.inventory.push({
-            name: wonSkin.name,
-            price: wonSkin.price,
-            image: wonSkin.image
-        });
-        
+        user.inventory.push(wonSkin);
         await user.save();
 
+        // Frontendga yutuqni va ruletka uchun barcha itemlarni yuboramiz
         res.json({ 
             success: true, 
-            newBalance: user.coins, 
-            wonSkin: wonSkin 
+            wonSkin: wonSkin, 
+            allItems: items, // Ruletka aylanishi uchun kerak
+            newBalance: user.coins 
         });
     } catch (error) {
-        console.error("Open Case Error:", error);
-        res.status(500).json({ success: false, error: "Server ichki xatosi" });
+        res.status(500).json({ success: false });
     }
 });
 

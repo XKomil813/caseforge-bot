@@ -79,15 +79,19 @@
         </div>
 
         <div id="keys-section" class="section hidden">
-            <div class="glass border border-white/10 p-8 rounded-3xl text-center">
-                <div class="relative group mb-8">
-                    <div class="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full"></div>
-                    <div class="relative w-48 h-48 mx-auto flex items-center justify-center">
-                        <img id="case-image" src="https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.png" alt="Case" class="w-full object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.3)]" />
+            <div class="glass border border-white/10 p-6 rounded-3xl text-center relative overflow-hidden">
+                
+                <div class="relative w-full overflow-hidden bg-black/40 h-36 my-6 rounded-2xl border-2 border-white/5 shadow-inner">
+                    <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-red-600 z-20 shadow-[0_0_15px_red] -translate-x-1/2"></div>
+                    
+                    <div id="roulette-container" class="flex items-center absolute left-0 h-full transition-all duration-[5s] ease-[cubic-bezier(0.15,0,0.05,1)]">
+                        <div id="initial-case" class="w-full flex justify-center items-center">
+                            <img src="https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.png" class="w-32 object-contain drop-shadow-2xl">
+                        </div>
                     </div>
                 </div>
                 
-                <div id="status" class="h-10 mb-6 flex items-center justify-center">
+                <div id="status" class="h-10 mb-6 flex items-center justify-center font-gaming text-[10px] tracking-widest uppercase">
                     </div> 
                 
                 <button id="openBtn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl font-gaming font-bold text-lg tracking-[2px] flex items-center justify-center space-x-2 shadow-xl shadow-blue-900/20 active:scale-95 transition-all">
