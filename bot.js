@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const https = require('https');
 const { CASES_DATA } = require('./cases.js');
+console.log('CASES_DATA loaded:', Object.keys(CASES_DATA));
 
 // ============ ADMIN SOZLAMALARI (3 TA ADMIN) ============
 // Admin ID lar: 8446680998, 6811819507, 7026979963

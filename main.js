@@ -1,4 +1,4 @@
-// Global o'zgaruvchilar
+// ============ GLOBAL O'ZGARUVCHILAR ============
 const tg = window.Telegram ? window.Telegram.WebApp : null;
 const RENDER_URL = 'https://caseforge-bot.onrender.com';
 const userId = tg?.initDataUnsafe?.user?.id || "64537281";
@@ -11,12 +11,19 @@ const CURRENCY_LABEL = "coin";
 // Formatlash funksiyalari
 const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} ${CURRENCY_LABEL}`;
 
-const sanitizeSkin = (raw) => {
-    if (raw && raw.image) return raw;
+// Xavfsiz skin yaratish funksiyasi - DUPLICATNI OLDINI OLADI
+const createSafeSkin = (skin) => {
+    if (!skin) {
+        return {
+            name: "Noma'lum Skin",
+            price: 0,
+            image: "https://via.placeholder.com/96?text=No+Image"
+        };
+    }
     return {
-        name: raw?.name || 'No-name skin',
-        price: raw?.price || 0,
-        image: raw?.image || 'https://via.placeholder.com/96?text=Skin'
+        name: skin.name || "Noma'lum Skin",
+        price: skin.price || 0,
+        image: skin.image || "https://via.placeholder.com/96?text=No+Image"
     };
 };
 
@@ -36,7 +43,7 @@ async function loadUserData() {
 
         userBalance = Number(data.coins) || 0;
         updateBalanceDisplay();
-        userInventory = data.inventory || [];
+        userInventory = (data.inventory || []).map(item => createSafeSkin(item));
         renderInventory();
 
         const userNameEl = document.getElementById('user-name');
@@ -57,23 +64,57 @@ function updateBalanceDisplay() {
 function setButtonState(btn, disabled) {
     if (!btn) return;
     btn.disabled = disabled;
-    btn.classList.toggle('opacity-50', disabled);
-    btn.classList.toggle('cursor-not-allowed', disabled);
+    if (disabled) {
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
 }
 
 function resetStatusAfterDelay(statusDisplay, delay = 2400) {
     if (!statusDisplay) return;
     setTimeout(() => {
-        statusDisplay.innerText = DEFAULT_STATUS;
+        if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
     }, delay);
 }
 
 // ============ CASE OPENING ============
+async function requestOpenCase(caseType) {
+    try {
+        const response = await fetch(`${RENDER_URL}/api/open-case`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, caseType })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server xatosi: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || "Case ochishda xatolik");
+        }
+        
+        if (!data.wonSkin) {
+            throw new Error("Yutilgan skin ma'lumoti yo'q");
+        }
+        
+        return data;
+    } catch (error) {
+        console.error("requestOpenCase error:", error);
+        throw error;
+    }
+}
+
 async function openCase() {
     if (isOpening) return;
 
     const caseId = currentCaseId || DEFAULT_CASE_ID;
-    const caseData = CASES_DATA?.[caseId];
+    const caseData = window.CASES_DATA?.[caseId];
+    
     if (!caseData) {
         console.error("Case ma'lumotlari topilmadi:", caseId);
         const statusDisplay = document.getElementById('status-text');
@@ -101,10 +142,8 @@ async function openCase() {
     }
 
     isOpening = true;
-    if (openBtn) {
-        openBtn.disabled = true;
-        openBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    }
+    setButtonState(openBtn, true);
+    
     if (statusDisplay) {
         statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic">🎲 KEYS OCHILMOQDA...</span>';
     }
@@ -112,37 +151,25 @@ async function openCase() {
     try {
         const payload = await requestOpenCase(caseId);
         
-        // Yangi balansni yangilash
         userBalance = Math.max(Number(payload.newBalance ?? userBalance - price), 0);
         updateBalanceDisplay();
 
-        // Yutilgan skin ni tekshirish
-        if (!payload.wonSkin) {
-            throw new Error("Yutilgan skin ma'lumoti yo'q");
-        }
-        
-        const safeWon = {
-            name: payload.wonSkin.name || "Noma'lum Skin",
-            price: payload.wonSkin.price || 0,
-            image: payload.wonSkin.image || "https://via.placeholder.com/96?text=Skin"
-        };
+        const safeWon = createSafeSkin(payload.wonSkin);
         
         userInventory.unshift(safeWon);
         renderInventory();
         
-        const pool = (Array.isArray(caseData.items) ? caseData.items : [])
-            .filter(item => item !== null && item !== undefined)
-            .map(item => ({
-                name: item.name || "Noma'lum Skin",
-                price: item.price || 0,
-                image: item.image || "https://via.placeholder.com/96?text=Skin"
-            }));
-            
-        if (pool.length === 0) {
-            pool.push(safeWon);
+        // Items pool ni xavfsiz holatga keltirish
+        let safePool = [];
+        if (Array.isArray(caseData.items)) {
+            safePool = caseData.items.map(item => createSafeSkin(item));
         }
         
-        startRoulette(safeWon, pool, openBtn, statusDisplay);
+        if (safePool.length === 0) {
+            safePool.push(safeWon);
+        }
+        
+        startRoulette(safeWon, safePool, openBtn, statusDisplay);
         incrementGlobalCounter();
         
     } catch (error) {
@@ -153,63 +180,15 @@ async function openCase() {
                 if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
             }, 3000);
         }
-        if (openBtn) {
-            openBtn.disabled = false;
-            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
+        setButtonState(openBtn, false);
         isOpening = false;
-    }
-}
-
-async function requestOpenCase(caseType) {
-    try {
-        const response = await fetch(`${RENDER_URL}/api/open-case`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, caseType })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Server xatosi: ${response.status} - ${errorText}`);
-        }
-
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.message || "Case ochishda xatolik");
-        }
-        
-        // wonSkin ni tekshirish
-        if (!data.wonSkin) {
-            throw new Error("Yutilgan skin ma'lumoti yo'q");
-        }
-        
-        return data;
-    } catch (error) {
-        console.error("requestOpenCase error:", error);
-        throw error;
     }
 }
 
 function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
     const itemsContainer = document.getElementById('roulette-items');
     const parentContainer = document.getElementById('roulette-container');
-    // ENG MUHIM TEKSHIRUV - image mavjudligi
-    console.log("wonSkin:", wonSkin);
-    console.log("itemsPool:", itemsPool);
-     if (!wonSkin) {
-        wonSkin = {
-            name: "Noma'lum Skin",
-            price: 0,
-            image: "https://via.placeholder.com/96?text=Skin"
-        };
-    }
-    
-    if (!wonSkin.image) {
-        wonSkin.image = "https://via.placeholder.com/96?text=No+Image";
-    }
-    // Xavfsizlik tekshiruvi
+
     if (!itemsContainer || !parentContainer) {
         console.error("Ruletka elementlari topilmadi!");
         if (statusDisplay) {
@@ -218,64 +197,42 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
                 if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
             }, 2000);
         }
-        if (openBtn) {
-            openBtn.disabled = false;
-            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
+        setButtonState(openBtn, false);
         isOpening = false;
         return;
     }
 
     try {
-        // Xavfsiz skin yaratish funksiyasi
-        const getSafeSkin = (skin) => {
-            if (!skin) {
-                return {
-                    name: "Noma'lum Skin",
-                    price: 0,
-                    image: "https://via.placeholder.com/96?text=No+Image"
-                };
-            }
-            return {
-                name: skin.name || "Noma'lum Skin",
-                price: skin.price || 0,
-                image: skin.image || "https://via.placeholder.com/96?text=No+Image"
-            };
-        };
-
-        const safeWonSkin = getSafeSkin(wonSkin);
+        const safeWon = createSafeSkin(wonSkin);
         
         // ItemsPool ni xavfsiz holatga keltirish
         let safePool = [];
         if (Array.isArray(itemsPool) && itemsPool.length > 0) {
-            safePool = itemsPool.filter(item => item !== null && item !== undefined).map(item => getSafeSkin(item));
+            safePool = itemsPool.filter(item => item !== null).map(item => createSafeSkin(item));
         }
         
-        // Agar pool bo'sh bo'lsa, yutilgan skin qo'shiladi
-        if (safePool.length === 0 && safeWonSkin) {
-            safePool.push(safeWonSkin);
+        if (safePool.length === 0 && safeWon) {
+            safePool.push(safeWon);
         }
 
         itemsContainer.innerHTML = '';
         itemsContainer.style.transition = 'none';
         itemsContainer.style.left = '0px';
 
-        const totalItems = 30; // Kamaytirdim, tezroq ishlashi uchun
-        const winningIndex = 25;
+        const totalItems = 25;
+        const winningIndex = 20;
         const itemWidth = 112;
 
         for (let i = 0; i < totalItems; i++) {
             let item;
             if (i === winningIndex) {
-                item = safeWonSkin;
+                item = safeWon;
             } else {
-                // Random skin tanlash
                 const randomIndex = Math.floor(Math.random() * safePool.length);
-                item = safePool[randomIndex] || safeWonSkin;
+                item = safePool[randomIndex] || safeWon;
             }
             
-            // Har bir item ni xavfsiz holatga keltirish
-            const safeItem = getSafeSkin(item);
+            const safeItem = createSafeSkin(item);
 
             const div = document.createElement('div');
             div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
@@ -291,7 +248,6 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             itemsContainer.appendChild(div);
         }
 
-        // Animatsiya
         setTimeout(() => {
             const parentWidth = parentContainer.offsetWidth;
             const targetOffset = (winningIndex * itemWidth) - (parentWidth / 2) + (itemWidth / 2);
@@ -299,39 +255,32 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             itemsContainer.style.left = `-${Math.max(0, targetOffset)}px`;
         }, 50);
 
-        // Natijani ko'rsatish
         setTimeout(() => {
             if (statusDisplay) {
                 statusDisplay.innerHTML = `
                     <div class="flex flex-col items-center animate-bounce">
                         <span class="text-green-400 font-black text-[12px]">🎉 TABRIKLAYMIZ! 🎉</span>
-                        <span class="text-[11px] text-white font-bold uppercase mt-1">${safeWonSkin.name}</span>
-                        <span class="text-[10px] text-yellow-400 font-bold">${formatCoins(safeWonSkin.price)}</span>
+                        <span class="text-[11px] text-white font-bold uppercase mt-1">${safeWon.name}</span>
+                        <span class="text-[10px] text-yellow-400 font-bold">${formatCoins(safeWon.price)}</span>
                     </div>
                 `;
                 setTimeout(() => {
                     if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
                 }, 4000);
             }
-            if (openBtn) {
-                openBtn.disabled = false;
-                openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+            setButtonState(openBtn, false);
             isOpening = false;
         }, 4500);
 
     } catch (err) {
         console.error('Ruletka xatosi:', err);
         if (statusDisplay) {
-            statusDisplay.innerHTML = '<span class="text-red-500">Xatolik yuz berdi, qayta urinib ko\'ring</span>';
+            statusDisplay.innerHTML = '<span class="text-red-500">Xatolik yuz berdi</span>';
             setTimeout(() => {
                 if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
             }, 3000);
         }
-        if (openBtn) {
-            openBtn.disabled = false;
-            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
+        setButtonState(openBtn, false);
         isOpening = false;
     }
 }
@@ -380,13 +329,16 @@ function renderInventory() {
         return;
     }
 
-    inventoryList.innerHTML = userInventory.map(item => `
-        <div class="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center text-center">
-            <img src="${item.image}" class="w-16 h-16 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=No+Img'">
-            <p class="text-[8px] text-white/70 font-bold uppercase truncate w-full">${item.name.substring(0, 25)}</p>
-            <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(item.price)}</p>
-        </div>
-    `).join('');
+    inventoryList.innerHTML = userInventory.map(item => {
+        const safe = createSafeSkin(item);
+        return `
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center text-center">
+                <img src="${safe.image}" class="w-16 h-16 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=No+Img'">
+                <p class="text-[8px] text-white/70 font-bold uppercase truncate w-full">${safe.name.substring(0, 25)}</p>
+                <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(safe.price)}</p>
+            </div>
+        `;
+    }).join('');
 }
 
 // ============ KEYS SECTION SETUP ============
@@ -402,7 +354,7 @@ function setupKeysSection() {
         <div class="glass border border-white/10 p-6 rounded-[32px] text-center shadow-2xl space-y-6">
             <div id="keys-list" class="space-y-4">
                 ${['eco', 'budget'].map(id => {
-                    const c = CASES_DATA[id];
+                    const c = window.CASES_DATA[id];
                     if (!c) return '';
                     return `
                         <div data-case-id="${id}" class="case-card relative overflow-hidden border border-white/10 rounded-[28px] p-4 bg-gradient-to-br from-white/5 to-transparent cursor-pointer hover:border-blue-500 transition-all">
@@ -469,12 +421,10 @@ function setupKeysSection() {
 
     keysSection.innerHTML = markup;
     
-    // Case kartalariga event listener
     keysSection.querySelectorAll('[data-case-id]').forEach(card => {
         card.addEventListener('click', () => showCaseDetail(card.dataset.caseId));
     });
     
-    // Orqaga button
     const backBtn = keysSection.querySelector('#back-to-list-btn');
     if (backBtn) {
         backBtn.addEventListener('click', (event) => {
@@ -487,10 +437,10 @@ function setupKeysSection() {
 function showCaseDetail(caseId) {
     const detail = document.getElementById('case-detail');
     const list = document.getElementById('keys-list');
-    const caseData = CASES_DATA?.[caseId];
+    const caseData = window.CASES_DATA?.[caseId];
     
     if (!detail || !list || !caseData) {
-        console.error("showCaseDetail: elementlar topilmadi", {detail, list, caseData});
+        console.error("showCaseDetail: elementlar topilmadi");
         return;
     }
 
@@ -498,11 +448,9 @@ function showCaseDetail(caseId) {
     list.classList.add('hidden');
     detail.classList.remove('hidden');
     
-    // Case nomi
     const caseNameEl = detail.querySelector('#detail-case-name');
     if (caseNameEl) caseNameEl.innerText = caseData.name;
     
-    // Case rasmi
     const imageEl = detail.querySelector('#detail-case-image');
     if (imageEl) {
         imageEl.src = caseData.image || 'https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.jpg';
@@ -511,13 +459,11 @@ function showCaseDetail(caseId) {
         };
     }
     
-    // Case narxi - BU MUHIM QISM!
     const priceEl = detail.querySelector('#detail-case-price');
     if (priceEl) {
         priceEl.innerText = formatCoins(caseData.price);
     }
     
-    // Open button narxi
     const openCasePrice = detail.querySelector('#open-case-price');
     if (openCasePrice) {
         openCasePrice.innerText = `(${formatCoins(caseData.price)})`;
@@ -545,11 +491,11 @@ function renderDetailItems(caseData) {
     if (!detailItems || !caseData?.items) return;
     
     detailItems.innerHTML = caseData.items.map(item => {
-        const safe = sanitizeSkin(item);
+        const safe = createSafeSkin(item);
         return `
             <div class="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center">
                 <img src="${safe.image}" class="w-14 h-14 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=No+Img'">
-                <p class="text-[7px] text-white/50 font-bold uppercase text-center">${safe.name.substring(0, 30)}</p>
+                <p class="text-[7px] text-white/50 font-bold uppercase text-center truncate w-full">${safe.name.substring(0, 30)}</p>
                 <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(safe.price)}</p>
             </div>
         `;
@@ -559,6 +505,7 @@ function renderDetailItems(caseData) {
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing...");
+    console.log("CASES_DATA loaded:", typeof window.CASES_DATA !== 'undefined');
     
     loadUserData();
     updateGlobalCounter();
