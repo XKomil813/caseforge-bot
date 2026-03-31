@@ -139,52 +139,74 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
         return;
     }
 
-    itemsContainer.innerHTML = '';
-    itemsContainer.style.transition = 'none';
-    itemsContainer.style.left = '0px';
+    try {
+        const normalize = (raw) => {
+            if (raw && raw.image) return raw;
+            return {
+                image: raw?.image || 'https://via.placeholder.com/64?text=?',
+                name: raw?.name || '???',
+                price: raw?.price || 0
+            };
+        };
 
-    const totalItems = 60;
-    const winningIndex = 50;
-    const itemWidth = 112;
+        const pool = (itemsPool || []).filter(Boolean).map(normalize);
+        if (!pool.length) pool.push(normalize(wonSkin));
+        const safeWin = normalize(wonSkin);
 
-    for (let i = 0; i < totalItems; i++) {
-        const rawItem = i === winningIndex ? wonSkin : itemsPool[Math.floor(Math.random() * itemsPool.length)];
-        const item = rawItem && rawItem.image ? rawItem : { image: rawItem?.image || 'https://via.placeholder.com/64?text=?', name: rawItem?.name || '???', price: rawItem?.price || 0 };
-        const div = document.createElement('div');
-        div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
+        itemsContainer.innerHTML = '';
+        itemsContainer.style.transition = 'none';
+        itemsContainer.style.left = '0px';
 
-        const color = item.price > 500 ? '#eb4b4b' : (item.price > 250 ? '#4b69ff' : '#b0c3d9');
-        div.style.borderColor = color;
+        const totalItems = 60;
+        const winningIndex = 50;
+        const itemWidth = 112;
 
-        div.innerHTML = `
-            <img src="${item.image}" class="w-14 h-14 object-contain mb-1">
-            <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center">${item.name}</p>
-            <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(item.price)}</p>
-        `;
-        itemsContainer.appendChild(div);
-    }
+        for (let i = 0; i < totalItems; i++) {
+            const item = i === winningIndex ? safeWin : pool[Math.floor(Math.random() * pool.length)];
+            const div = document.createElement('div');
+            div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
 
-    setTimeout(() => {
-        const parentWidth = parentContainer.offsetWidth;
-        const targetOffset = (winningIndex * itemWidth) - (parentWidth / 2) + (itemWidth / 2);
-        itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
-        itemsContainer.style.left = `-${targetOffset}px`;
-    }, 50);
+            const color = item.price > 500 ? '#eb4b4b' : (item.price > 250 ? '#4b69ff' : '#b0c3d9');
+            div.style.borderColor = color;
 
-    setTimeout(() => {
-        if (statusDisplay) {
-            statusDisplay.innerHTML = `
-                <div class="flex flex-col items-center animate-bounce">
-                    <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
-                    <span class="text-[10px] text-white font-bold uppercase">${wonSkin.name}</span>
-                </div>
+            div.innerHTML = `
+                <img src="${item.image}" class="w-14 h-14 object-contain mb-1">
+                <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center">${item.name}</p>
+                <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(item.price)}</p>
             `;
-            resetStatusAfterDelay(statusDisplay, 4000);
+            itemsContainer.appendChild(div);
         }
 
+        setTimeout(() => {
+            const parentWidth = parentContainer.offsetWidth;
+            const targetOffset = (winningIndex * itemWidth) - (parentWidth / 2) + (itemWidth / 2);
+            itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
+            itemsContainer.style.left = `-${targetOffset}px`;
+        }, 50);
+
+        setTimeout(() => {
+            if (statusDisplay) {
+                statusDisplay.innerHTML = `
+                    <div class="flex flex-col items-center animate-bounce">
+                        <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
+                        <span class="text-[10px] text-white font-bold uppercase">${safeWin.name}</span>
+                    </div>
+                `;
+                resetStatusAfterDelay(statusDisplay, 4000);
+            }
+
+            setButtonState(openBtn, false);
+            isOpening = false;
+        }, 5500);
+    } catch (err) {
+        console.error('roulette', err);
+        if (statusDisplay) {
+            statusDisplay.innerHTML = `<span class="text-red-500 font-black text-[10px]">Xatolik: ${err.message}</span>`;
+            resetStatusAfterDelay(statusDisplay, 4000);
+        }
         setButtonState(openBtn, false);
         isOpening = false;
-    }, 5500);
+    }
 }
 
 async function updateGlobalCounter() {
