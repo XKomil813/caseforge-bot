@@ -106,30 +106,31 @@ function startRoulette(wonSkin) {
 }, 50);
 
 
-    // 5. NATIJANI KORSATISH (5.5 soniyadan keyin)
-    setTimeout(() => {
-        // Matnni o'zgartirish uchun elementni ID orqali topamiz
-        const statusDisplay = document.getElementById('status-text');
-        
-        if (statusDisplay) {
-            statusDisplay.innerHTML = `
-                <div class="flex flex-col items-center animate-bounce">
-                    <span class="text-green-400 font-black text-[12px] tracking-tighter uppercase">Tabriklaymiz!</span>
-                    <span class="text-[10px] text-white font-bold uppercase tracking-tight">${wonSkin.name}</span>
-                </div>
-            `;
-        }
 
-        // Tugmani qayta yoqish
-        if (openBtn) {
-            openBtn.disabled = false;
-            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
+setTimeout(() => {
+    const statusDisplay = document.getElementById('status-text');
+    const openBtn = document.getElementById('openBtn');
 
-        // Balansni yangilash
-        loadUserData(); 
-    }, 5500);
-}
+    if (statusDisplay) {
+        // "Ochilmoqda" matnini yutuq matniga almashtiramiz
+        statusDisplay.innerHTML = `
+            <div class="flex flex-col items-center animate-bounce">
+                <span class="text-green-400 font-black text-[12px] tracking-tighter">TABRIKLAYMIZ!</span>
+                <span class="text-[10px] text-white font-bold uppercase">${wonSkin.name}</span>
+            </div>
+        `;
+    }
+
+    // Tugmani yana yoqish
+    if (openBtn) {
+        openBtn.disabled = false;
+        openBtn.style.opacity = "1";
+    }
+
+    // Balansni va invertarni yangilash (Sizning funksiyalaringiz)
+    if(typeof loadUserData === 'function') loadUserData();
+}, 5500);
+
 
 // 4. VAZIFALAR (STREAK) MANTIQLARI
 let streak = parseInt(localStorage.getItem('userStreak')) || 0;
@@ -278,3 +279,4 @@ window.showSection = function(sectionId, element) {
     if (element) element.classList.add('text-orange-500');
     loadUserData();
 };
+}
