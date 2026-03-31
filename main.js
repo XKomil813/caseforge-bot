@@ -195,7 +195,20 @@ async function requestOpenCase(caseType) {
 function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
     const itemsContainer = document.getElementById('roulette-items');
     const parentContainer = document.getElementById('roulette-container');
-
+    // ENG MUHIM TEKSHIRUV - image mavjudligi
+    console.log("wonSkin:", wonSkin);
+    console.log("itemsPool:", itemsPool);
+     if (!wonSkin) {
+        wonSkin = {
+            name: "Noma'lum Skin",
+            price: 0,
+            image: "https://via.placeholder.com/96?text=Skin"
+        };
+    }
+    
+    if (!wonSkin.image) {
+        wonSkin.image = "https://via.placeholder.com/96?text=No+Image";
+    }
     // Xavfsizlik tekshiruvi
     if (!itemsContainer || !parentContainer) {
         console.error("Ruletka elementlari topilmadi!");

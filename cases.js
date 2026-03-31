@@ -1,11 +1,10 @@
 const CASES_DATA = {
-    // 1-KEYS: ECO CASE (Eng arzon, 200-800 Coin oralig'ida)
     eco: {
         name: "Eco Case",
         price: 500,
         image: "https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.jpg",
         items: [
-            // --- STIKERLAR (200 - 500 Coin) ---
+            // STIKERLAR
             { name: "Sticker | Team Spirit | Austin 2025", price: 200, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMu0JinHtwM655f9-Be_GUrymM-3qiNe7fD3OPBpcqTCXD-SlLwhtrlvHXHqlkkh42rdmdepbzvJOY6xuzgr/62fx62f" },
             { name: "Sticker | w0nderful | Copenhagen 2024", price: 200, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMmxPSnHtwI6547z1U63Txn0jJD18WwJvaH_afE_JvGWCDTJlbp3s7VrSS23kU8hsT7dntyoeXiRaQFxA8N2W6dU5WVOh0b2/62fx62f" },
             { name: "Sticker | G2 Esports | Shanghai 2024", price: 200, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjNmpNCnHtwI689W67F_hEhijzJO1qXYIuvP2a_I4IvGXXj6SxLx0tbNsHii1lkkhsWuEysHpLyx0-_Pr6Q/330x192?allow_animated=1" },
@@ -14,8 +13,7 @@ const CASES_DATA = {
             { name: "Sticker | Bolt Energy", price: 500, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMmuOHaC619h7cjx5lzqRBPln5rf_jBa6ebheKV9JeKsAm6Xyfp4ue9ucCa9kFN36j6Hz9b6d3PEag4kCpIkEeUIu0S-moDvZeyw5lbe3t1CmX39jylO8G81tImGLAtH/62fx62f" },
             { name: "Sticker | Boom Trail", price: 600, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMmuOHaC619h7cjx5lzqRBPln5rf_jBa6ebheKV9JeKsC3-AzeFlue5ncC-8gA9p62nVytf7JX6Ta1QnX8MhQbMDthS8ktzlMOrjtlDd2tpFyHqtjX4a6DErvbjqMUT31w/62fx62f" },
             { name: "Sticker | donk | Shanghai 2024", price: 750, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjNmpNCnHtwI6547z1V3oTxa_yc_mqXUIvaf-a6E9cfKSDTSSk7935ONqTC_rzEUj52XdyNuucy7COBhgVMW4-Ikr3g/62fx62f" },
-
-            // --- SKINLAR (200 - 800 Coin) ---
+            // SKINLAR
             { name: "P90 | Blue Tac (BS)", price: 200, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLhx8bf9Ttk-uGvbpt_L-WdCliYxO9gqa8xGCixxBkisGvQno77ci6WZwAmDcEmE-QNsEPrwNDiY-Lk4gKP2N1H02yg2en0l_pr/62fx62f" },
             { name: "MAC-10 | Storm Camo (BS)", price: 200, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8n5WxrR1I4P2RZaVucaCsDGuFxOxzovNwcCG2lAs-_T-Ay9_4dXOUb1InX5B5TbQPsxDqw9PjZOPr4gyPjNlEyS75jHxMun51o7FVAYwy7XA/62fx62f" },
             { name: "MP7 | Army Recon (BS)", price: 200, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8jsHf7jJk_OK8ab1SIeKeF1iYxO9gqa9vH3Cywxgk6j-DnN7_eHuXaAByDZRxELVcsUbpxtS2Purg5VGMjtlD02yg2e4m4vUr/62fx62f" },
@@ -26,8 +24,6 @@ const CASES_DATA = {
             { name: "MP7 | Sunbaked (BS)", price: 800, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8jsHf-jFk4uL5V7d5Mv-dC1iYxO9gqa87GnvgzUgk5W7Rz977cnvGawJ1DJMhQ-8J4RS5xIfkMLy2tFGP3dpD02yg2RR-mtGR/62fx62f" }
         ]
     },
-
-    // 2-KEYS: BUDGET CASE (Qimmatroq, 1000 - 3000 Coin oralig'ida)
     budget: {
         name: "Budget Case",
         price: 1500,
@@ -43,12 +39,10 @@ const CASES_DATA = {
     }
 };
 
-// CASES_DATA ni global qilish
+// Global qilish
 if (typeof window !== 'undefined') {
     window.CASES_DATA = CASES_DATA;
 }
-
-// Export qilish (agar Node.js muhitida ishlatilsa)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { CASES_DATA };
 }
