@@ -43,7 +43,18 @@ async function loadUserData() {
 
         userBalance = Number(data.coins) || 0;
         updateBalanceDisplay();
-        userInventory = (data.inventory || []).map(item => createSafeSkin(item));
+        
+        // Inventory ni xavfsiz holatga keltirish
+        if (data.inventory && Array.isArray(data.inventory)) {
+            userInventory = data.inventory.map(item => ({
+                name: item?.name || "Noma'lum Skin",
+                price: item?.price || 0,
+                image: item?.image || "https://via.placeholder.com/96?text=No+Image"
+            }));
+        } else {
+            userInventory = [];
+        }
+        
         renderInventory();
 
         const userNameEl = document.getElementById('user-name');
@@ -53,6 +64,9 @@ async function loadUserData() {
         if (userIdEl) userIdEl.innerText = `ID: ${data.id || userId}`;
     } catch (error) {
         console.error("Ma'lumot yuklashda xato:", error);
+        // Xatolik bo'lsa ham inventarni tozalaymiz
+        userInventory = [];
+        renderInventory();
     }
 }
 
@@ -319,7 +333,7 @@ function renderInventory() {
     const inventoryList = document.getElementById('inventory-list');
     if (!inventoryList) return;
 
-    if (!userInventory.length) {
+    if (!userInventory || !userInventory.length) {
         inventoryList.innerHTML = `
             <div class="col-span-2 flex flex-col items-center justify-center py-20 opacity-20">
                 <span class="material-icons-outlined text-5xl">inventory_2</span>
@@ -329,13 +343,20 @@ function renderInventory() {
         return;
     }
 
+    // Xavfsiz render qilish - har bir item ni tekshirib chiqamiz
     inventoryList.innerHTML = userInventory.map(item => {
-        const safe = createSafeSkin(item);
+        // Item ni xavfsiz holatga keltirish
+        const safeItem = {
+            name: item?.name || "Noma'lum Skin",
+            price: item?.price || 0,
+            image: item?.image || "https://via.placeholder.com/96?text=No+Image"
+        };
+        
         return `
             <div class="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center text-center">
-                <img src="${safe.image}" class="w-16 h-16 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=No+Img'">
-                <p class="text-[8px] text-white/70 font-bold uppercase truncate w-full">${safe.name.substring(0, 25)}</p>
-                <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(safe.price)}</p>
+                <img src="${safeItem.image}" class="w-16 h-16 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=Error'">
+                <p class="text-[8px] text-white/70 font-bold uppercase truncate w-full" title="${safeItem.name}">${safeItem.name.substring(0, 25)}</p>
+                <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(safeItem.price)}</p>
             </div>
         `;
     }).join('');
