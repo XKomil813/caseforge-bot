@@ -105,16 +105,29 @@ function startRoulette(wonSkin) {
     itemsContainer.style.left = `-${targetOffset}px`;
 }, 50);
 
-    // 5. Natijani ko'rsatish
+
+    // 5. NATIJANI KORSATISH (5.5 soniyadan keyin)
     setTimeout(() => {
-        const statusText = document.querySelector('.text-green-400')?.parentElement;
-        if (statusText) {
-            statusText.innerHTML = `
-                <span class="text-green-400 font-black text-[12px] animate-pulse">TABRIKLAYMIZ!</span>
-                <span class="text-[10px] text-white font-bold block">${wonSkin.name}</span>
+        // Matnni o'zgartirish uchun elementni ID orqali topamiz
+        const statusDisplay = document.getElementById('status-text');
+        
+        if (statusDisplay) {
+            statusDisplay.innerHTML = `
+                <div class="flex flex-col items-center animate-bounce">
+                    <span class="text-green-400 font-black text-[12px] tracking-tighter uppercase">Tabriklaymiz!</span>
+                    <span class="text-[10px] text-white font-bold uppercase tracking-tight">${wonSkin.name}</span>
+                </div>
             `;
         }
-        if (openBtn) openBtn.disabled = false;
+
+        // Tugmani qayta yoqish
+        if (openBtn) {
+            openBtn.disabled = false;
+            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Balansni yangilash
+        loadUserData(); 
     }, 5500);
 }
 
