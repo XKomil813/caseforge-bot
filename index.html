@@ -110,6 +110,43 @@
                     </button>
                 </div>
             </div>
+            <div id="tasks-section" class="section hidden animate-fade-in">
+                <div class="glass border border-white/10 p-6 rounded-[32px] shadow-2xl">
+                    <h2 class="text-xl font-black font-gaming italic uppercase text-white mb-6 text-center">Kundalik Vazifalar</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white/5 p-4 rounded-[22px] border border-white/5 flex justify-between items-center">
+                            <div class="text-left">
+                                <p class="text-[10px] font-black font-gaming uppercase text-white">Bio-da Referal</p>
+                                <p class="text-[9px] text-gray-500 mt-1 italic">Bot havolasini bio-ga qo'shing</p>
+                            </div>
+                            <button onclick="openTaskModal()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-[9px] font-black font-gaming uppercase shadow-lg shadow-blue-900/20 active:scale-95 transition-all">
+                                +20 🪙
+                            </button>
+                        </div>
+
+                        <div class="bg-white/5 p-4 rounded-[22px] border border-white/5 flex justify-between items-center">
+                            <div class="text-left">
+                                <p class="text-[10px] font-black font-gaming uppercase text-white">Ismda Bot Nomi</p>
+                                <p class="text-[9px] text-gray-500 mt-1 italic">Ismingizga @CaseForge qo'shing</p>
+                            </div>
+                            <button onclick="openNameModal()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-[9px] font-black font-gaming uppercase shadow-lg shadow-blue-900/20 active:scale-95 transition-all">
+                                +20 🪙
+                            </button>
+                        </div>
+
+                        <div class="bg-white/5 p-4 rounded-[22px] border border-white/5 flex justify-between items-center">
+                            <div class="text-left">
+                                <p class="text-[10px] font-black font-gaming uppercase text-white">Hamkor Kanallar</p>
+                                <p class="text-[9px] text-gray-500 mt-1 italic">Kanalga a'zo bo'ling</p>
+                            </div>
+                            <button class="bg-gray-700 text-gray-400 px-4 py-2 rounded-xl text-[9px] font-black font-gaming uppercase cursor-not-allowed">
+                                TEZ KUNDA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div id="inventory-section" class="section hidden">
                 <div class="glass border border-white/10 rounded-[32px] p-6 shadow-2xl min-h-[400px]">
@@ -155,6 +192,10 @@
             <button onclick="showSection('home-section', this)" class="nav-btn flex flex-col items-center text-orange-500">
                 <span class="material-icons-outlined">home</span>
                 <span class="text-[8px] font-bold mt-1 uppercase font-gaming tracking-widest">Asosiy</span>
+            </button>
+            <button onclick="showSection('tasks-section', this)" class="nav-btn flex flex-col items-center text-gray-500">
+                <span class="material-icons-outlined">assignment</span>
+                <span class="text-[8px] font-bold mt-1 uppercase font-gaming tracking-widest">Vazifalar</span>
             </button>
             <button onclick="showSection('keys-section', this)" class="nav-btn flex flex-col items-center text-gray-500">
                 <span class="material-icons-outlined">inventory_2</span>
