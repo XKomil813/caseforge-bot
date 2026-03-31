@@ -3,7 +3,8 @@ const RENDER_URL = 'https://caseforge-bot.onrender.com';
 const userId = tg?.initDataUnsafe?.user?.id || "64537281";
 
 const CASE_TYPE = 'eco';
-const CASE_DATA = typeof CASES_DATA !== 'undefined' ? CASES_DATA[CASE_TYPE] : null;
+const DEFAULT_CASE_ID = CASE_TYPE;
+let currentCaseId = DEFAULT_CASE_ID;
 const DEFAULT_STATUS = "OCHISHGA TAYYOR";
 
 let userBalance = 0;
@@ -55,14 +56,17 @@ function resetStatusAfterDelay(statusDisplay, delay = 2400) {
 
 async function openCase() {
     if (isOpening) return;
-    if (!CASE_DATA) {
-        console.error("CASE_DATA mavjud emas");
+
+    const caseId = currentCaseId || DEFAULT_CASE_ID;
+    const caseData = CASES_DATA?.[caseId];
+    if (!caseData) {
+        console.error("Case ma'lumotlari topilmadi:", caseId);
         return;
     }
 
     const statusDisplay = document.getElementById('status-text');
     const openBtn = document.getElementById('openBtn');
-    const price = CASE_DATA.price || 500;
+    const price = caseData.price || 500;
 
     if (userBalance < price) {
         if (statusDisplay) {
@@ -79,13 +83,13 @@ async function openCase() {
     }
 
     try {
-        const payload = await requestOpenCase(CASE_TYPE);
+        const payload = await requestOpenCase(caseId);
         userBalance = Math.max(Number(payload.newBalance ?? userBalance - price), 0);
         updateBalanceDisplay();
 
         if (payload.wonSkin) {
             userInventory.unshift(payload.wonSkin);
-            startRoulette(payload.wonSkin, CASE_DATA.items, openBtn, statusDisplay);
+            startRoulette(payload.wonSkin, caseData.items, openBtn, statusDisplay);
         } else {
             throw new Error("Yutuq uchun ma'lumot yo'q");
         }
@@ -201,9 +205,135 @@ async function incrementGlobalCounter() {
     }
 }
 
+function setupKeysSection() {
+    const keysSection = document.getElementById('keys-section');
+    if (!keysSection) return;
+    if (!CASES_DATA) return;
+
+    const markup = `
+        <div class="glass border border-white/10 p-6 rounded-[32px] text-center shadow-2xl space-y-6">
+            <div id="keys-list" class="space-y-4">
+                <div data-case-id="eco" class="case-card relative overflow-hidden border border-white/10 rounded-[28px] p-4 bg-gradient-to-br from-white/5 to-transparent cursor-pointer hover:border-blue-500 transition-all">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="text-left">
+                            <p class="text-[10px] font-gaming uppercase tracking-[0.4em] text-blue-400">Keyslar</p>
+                            <h3 class="text-2xl font-black uppercase font-gaming tracking-tighter text-white mt-1">Eco Case</h3>
+                            <p class="text-[9px] text-gray-500 mt-1">Eng yengil case | 20+ skin</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-yellow-400 font-black text-lg">500 Ñ€ÑŸÐ„â„¢</p>
+                            <p class="text-[8px] uppercase tracking-[0.6em] text-gray-400">Bir marta</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center justify-center">
+                        <img src="${CASES_DATA.eco?.image || 'https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.png'}" class="h-24 object-contain">
+                    </div>
+                    <div class="mt-2 text-[9px] uppercase text-white/70 tracking-[0.3em]">Batafsil korish uchun bosing</div>
+                </div>
+            </div>
+
+            <div id="case-detail" class="hidden space-y-6 text-left">
+                <div class="relative overflow-hidden rounded-[32px] border border-white/10 bg-black/40">
+                    <div class="case-detail-hero min-h-[60vh] md:min-h-[80vh] flex items-center justify-center p-6">
+                        <img id="detail-case-image" src="${CASES_DATA.eco?.image || ''}" class="max-h-full object-contain drop-shadow-[0_0_40px_rgba(59,130,246,0.6)]">
+                    </div>
+                    <div class="p-5 bg-gradient-to-t from-black/80 to-transparent space-y-2">
+                        <div class="flex items-center justify-between">
+                            <p id="detail-case-name" class="text-lg font-black uppercase font-gaming text-white">Eco Case</p>
+                            <button data-action="back" class="text-[10px] uppercase tracking-[0.4em] text-blue-400">ORQAGA</button>
+                        </div>
+                        <p id="detail-case-price" class="text-[12px] tracking-[0.3em] text-yellow-400 font-bold">500 Ñ€ÑŸÐ„â„¢</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] uppercase tracking-[0.5em] text-white/80 font-bold">Case ichidagi itemlar</p>
+                        <p class="text-[8px] uppercase tracking-[0.4em] text-blue-400 font-bold">Coins qiymat</p>
+                    </div>
+                    <div id="detail-items" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                </div>
+
+                <div class="space-y-4">
+                    <div id="roulette-container" class="relative w-full overflow-hidden bg-[#0a0a0a] h-36 rounded-2xl border-2 border-white/5 flex items-center transition-all">
+                        <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-red-600 z-50 shadow-[0_0_15px_rgba(220,38,38,0.8)] -translate-x-1/2"></div>
+                        <div id="roulette-items" class="flex flex-nowrap items-center absolute left-0 h-full whitespace-nowrap"></div>
+                    </div>
+
+                    <div id="status-text" class="h-14 flex items-center justify-center font-gaming text-[10px] tracking-widest uppercase text-white/60 text-center transition-all">
+                        OCHISHGA TAYYOR
+                    </div>
+                </div>
+
+                <button id="openBtn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl font-gaming font-bold text-base tracking-[1px] shadow-xl shadow-blue-900/30 active:scale-95 transition-all flex items-center justify-center space-x-2">
+                    <span>KEYSNI OCHISH</span>
+                    <span class="text-yellow-400 text-xs" id="open-case-price">(500 Ñ€ÑŸÐ„â„¢)</span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    keysSection.innerHTML = markup;
+    keysSection.querySelectorAll('[data-case-id]').forEach(card => {
+        card.addEventListener('click', () => showCaseDetail(card.dataset.caseId));
+    });
+
+    const backBtn = keysSection.querySelector('[data-action=\"back\"]');
+    if (backBtn) {
+        backBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            showCaseList();
+        });
+    }
+}
+
+function showCaseDetail(caseId) {
+    const detail = document.getElementById('case-detail');
+    const list = document.getElementById('keys-list');
+    const caseData = CASES_DATA?.[caseId];
+    if (!detail || !list || !caseData) return;
+
+    currentCaseId = caseId;
+    list.classList.add('hidden');
+    detail.classList.remove('hidden');
+    detail.querySelector('#detail-case-name').innerText = caseData.name;
+    const imageEl = detail.querySelector('#detail-case-image');
+    if (imageEl) imageEl.src = caseData.image || '';
+    const priceEl = detail.querySelector('#detail-case-price');
+    if (priceEl) priceEl.innerText = `${caseData.price} Ñ€ÑŸÐ„â„¢`;
+    const openCasePrice = detail.querySelector('#open-case-price');
+    if (openCasePrice) openCasePrice.innerText = `(${caseData.price} Ñ€ÑŸÐ„â„¢)`;
+    renderDetailItems(caseData);
+}
+
+function showCaseList() {
+    const detail = document.getElementById('case-detail');
+    const list = document.getElementById('keys-list');
+    if (detail && list) {
+        detail.classList.add('hidden');
+        list.classList.remove('hidden');
+    }
+    currentCaseId = DEFAULT_CASE_ID;
+    const statusDisplay = document.getElementById('status-text');
+    if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
+}
+
+function renderDetailItems(caseData) {
+    const detailItems = document.getElementById('detail-items');
+    if (!detailItems || !caseData?.items) return;
+    detailItems.innerHTML = caseData.items.map(item => `
+        <div class="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center">
+            <img src="${item.image}" class="w-14 h-14 object-contain mb-2">
+            <p class="text-[7px] text-white/50 font-bold uppercase text-center">${item.name}</p>
+            <p class="text-[10px] text-yellow-400 font-black mt-1">${item.price} Ñ€ÑŸÐ„â„¢</p>
+        </div>
+    `).join('');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadUserData();
     updateGlobalCounter();
+    setupKeysSection();
 
     const openBtn = document.getElementById('openBtn');
     if (openBtn) {
