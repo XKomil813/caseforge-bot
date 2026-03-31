@@ -91,13 +91,20 @@ async function openCase() {
         userBalance = Math.max(Number(payload.newBalance ?? userBalance - price), 0);
         updateBalanceDisplay();
 
-        if (payload.wonSkin) {
-            userInventory.unshift(payload.wonSkin);
+        const fallbackSkin = {
+            name: 'No-name skin',
+            price: caseData.price || 0,
+            image: 'https://via.placeholder.com/96?text=Skin'
+        };
+
+        const safeWon = payload.wonSkin && payload.wonSkin.image ? payload.wonSkin : fallbackSkin;
+        if (safeWon) {
+            userInventory.unshift(safeWon);
             renderInventory();
             const pool = Array.isArray(caseData.items) && caseData.items.length
                 ? caseData.items
-                : [payload.wonSkin];
-            startRoulette(payload.wonSkin, pool, openBtn, statusDisplay);
+                : [safeWon];
+            startRoulette(safeWon, pool, openBtn, statusDisplay);
         } else {
             throw new Error("Yutuq uchun ma'lumot yo'q");
         }
