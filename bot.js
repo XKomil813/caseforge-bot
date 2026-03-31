@@ -156,6 +156,19 @@ setInterval(() => {
   }
 }, 600000);
 
+let globalTotalOpened = 0; // 10.2M o'rniga shu ishlatiladi
+
+// Keys ochilganda serverga xabar yuborish
+app.post('/api/cases/open-count', (req, res) => {
+    globalTotalOpened++;
+    res.json({ total: globalTotalOpened });
+});
+
+// Saytga kirganda umumiy sonni olish
+app.get('/api/cases/total', (req, res) => {
+    res.json({ total: globalTotalOpened });
+});
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
