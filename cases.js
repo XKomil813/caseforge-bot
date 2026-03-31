@@ -3,6 +3,7 @@ const CASES_DATA = {
     eco: {
         name: "Eco Case",
         price: 500, // Ochish narxi
+        image: "https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.png",
         items: [
             // --- STIKERLAR (200 - 500 Coin) ---
             { name: "Sticker | Team Spirit | Austin 2025", price: 200, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMu0JinHtwM655f9-Be_GUrymM-3qiNe7fD3OPBpcqTCXD-SlLwhtrlvHXHqlkkh42rdmdepbzvJOY6xuzgr/62fx62f", chance: 5 },
@@ -30,6 +31,7 @@ const CASES_DATA = {
     budget: {
         name: "Budget Case",
         price: 1500, // Budget case qimmatroq bo'lishi mantiqan to'g'ri
+        image: "https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/budget-case.png",
         items: [
             { name: "P90 | Teardown (MW)", price: 3000, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLhx8bf7jJk4ve9YJtlL-SsD2mU_u15vOVWQyC0nQlp5mjWy4n9cX3FZ1UiApMkQbJZ4BK8ktXnM-zrsgzeg4wQyHr3iiMc5zErvbiseXdBZA/62fx62f", chance: 15 },
             { name: "UMP-45 | Oscillator (FT)", price: 2800, image: "https://community.fastly.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkk4a0qB1a4s27ZbQ5dc-WAmKT1fx5p-B_Sha-kBkupjDLmdevcHjGbVMgWZZ3R7Rb5xXuk93iYePh4QGIiI1EmCqtjikb5ytpt_FCD_RHfTtqUQ/62fx62f", chance: 15 },
