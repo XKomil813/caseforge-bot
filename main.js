@@ -342,8 +342,9 @@ function showCaseDetail(caseId) {
     detail.classList.remove('hidden');
     detail.querySelector('#detail-case-name').innerText = caseData.name;
     const imageEl = detail.querySelector('#detail-case-image');
-    if (imageEl) imageEl.src = caseData.image || '';
-    const priceEl = detail.querySelector('#detail-case-price');
+    if (imageEl) {
+    imageEl.src = caseData.image || 'img/default-case.png';
+    imageEl.onerror = () => { imageEl.src = 'https://via.placeholder.com/200?text=Case+Image'; };}
     if (priceEl) priceEl.innerText = formatCoins(caseData.price);
     const openCasePrice = detail.querySelector('#open-case-price');
     if (openCasePrice) openCasePrice.innerText = `(${formatCoins(caseData.price)})`;
