@@ -168,7 +168,11 @@ async function openCase() {
         userBalance = Math.max(Number(payload.newBalance ?? userBalance - price), 0);
         updateBalanceDisplay();
 
-        const safeWon = createSafeSkin(payload.wonSkin);
+        const safeWon = {
+            name: payload.wonSkin?.name || "Noma'lum",
+            price: payload.wonSkin?.price || 0,
+            image: payload.wonSkin?.image || "https://via.placeholder.com/96?text=No+Image"
+        };
         
         userInventory.unshift(safeWon);
         renderInventory();
@@ -255,9 +259,9 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             div.style.borderColor = color;
 
             div.innerHTML = `
-                <img src="${safeItem.image}" class="w-14 h-14 object-contain mb-1" onerror="this.src='https://via.placeholder.com/96?text=Error'">
-                <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center truncate">${safeItem.name.substring(0, 20)}</p>
-                <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(safeItem.price)}</p>
+                <img src="${item?.image || 'https://via.placeholder.com/96?text=No+Image'}" class="w-14 h-14 object-contain mb-1" onerror="this.src='https://via.placeholder.com/96?text=Error'">
+                <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center truncate">${item?.name || 'Noma\'lum'}</p>
+                <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(item?.price || 0)}</p>
             `;
             itemsContainer.appendChild(div);
         }
@@ -515,7 +519,7 @@ function renderDetailItems(caseData) {
         const safe = createSafeSkin(item);
         return `
             <div class="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center">
-                <img src="${safe.image}" class="w-14 h-14 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=No+Img'">
+                <img src="${safe?.image || 'https://via.placeholder.com/96?text=No+Image'}" class="w-14 h-14 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=No+Img'">
                 <p class="text-[7px] text-white/50 font-bold uppercase text-center truncate w-full">${safe.name.substring(0, 30)}</p>
                 <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(safe.price)}</p>
             </div>
