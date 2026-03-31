@@ -232,7 +232,7 @@ ${['eco','budget'].map(id => {
                         </div>
                     </div>
                     <div class="mt-4 flex items-center justify-center">
-                        <img src="${c.image || 'https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.png'}" class="h-24 object-contain">
+                        <img src="${c.image || 'https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.jpg'}" class="h-24 object-contain">
                     </div>
                     <div class="mt-2 text-[9px] uppercase text-white/70 tracking-[0.3em]">Batafsil ko'rish uchun bosing</div>
                 </div>
