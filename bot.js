@@ -59,32 +59,51 @@ app.get('/api/user/:id', async (req, res) => {
 // Keys ochish API
 // bot.js ichidagi api/open-case ni shu bilan almashtiring:
 app.post('/api/open-case', async (req, res) => {
-    // Brauzerga javobni keshlamaslikni aytamiz
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    
+
     try {
         const { userId, caseType } = req.body;
-        const user = await User.findOne({ telegramId: userId });
-        const items = CASES_DATA[caseType].items;
+        if (!userId || !caseType) {
+            return res.status(400).json({ success: false, message: "userId yoki caseType yo'q" });
+        }
 
-        // Tasodifiylikni oshirish uchun vaqtga bog'laymiz
+        const caseData = CASES_DATA[caseType];
+        if (!caseData) {
+            return res.status(400).json({ success: false, message: "Bunday case topilmadi" });
+        }
+
+        const user = await User.findOne({ telegramId: Number(userId) });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Foydalanuvchi bazada topilmadi" });
+        }
+
+        if (user.coins < caseData.price) {
+            return res.status(400).json({ success: false, message: "Mablag' yetarli emas" });
+        }
+
+        const items = caseData.items || [];
+        if (!items.length) {
+            return res.status(400).json({ success: false, message: "Case ichida itemlar mavjud emas" });
+        }
+
         const randomIndex = Math.floor(Math.random() * items.length);
         const wonSkin = items[randomIndex];
 
-        // ... (balansni ayirish va saqlash kodi)
-        user.coins -= 500;
-        user.totalOpened += 1; //
-        user.inventory.push(wonSkin);
+        user.coins -= caseData.price;
+        user.totalOpened += 1;
+        user.inventory.push({ ...wonSkin });
         await user.save();
 
-        res.json({ 
-            success: true, 
-            wonSkin: wonSkin, 
+        res.json({
+            success: true,
+            wonSkin,
             newBalance: user.coins,
-            timestamp: Date.now() // Har safar har xil vaqt yuboramiz
+            totalOpened: user.totalOpened,
+            timestamp: Date.now()
         });
     } catch (error) {
-        res.status(500).json({ success: false });
+        console.error("open-case:", error);
+        res.status(500).json({ success: false, message: error.message || "Server xatosi" });
     }
 });
 
