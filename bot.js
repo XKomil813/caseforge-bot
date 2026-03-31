@@ -11,9 +11,7 @@ let ADMIN_IDS = [8446680998, 6811819507, 7026979963]; // Default 3 ta admin
 
 try {
     if (process.env.ADMIN_IDS) {
-        // JSON string ni parse qilish
         ADMIN_IDS = JSON.parse(process.env.ADMIN_IDS);
-        // Har bir ID ni integer ga o'tkazish
         ADMIN_IDS = ADMIN_IDS.map(id => parseInt(id));
         console.log('✅ Adminlar ro\'yxati yuklandi:', ADMIN_IDS);
     } else {
@@ -39,14 +37,24 @@ app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
-// --- DATABASE ULANISHI ---
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000
-})
+// --- DATABASE ULANISHI (TUZATILGAN) ---
+// Eski optionlarni olib tashladik, chunki ular qo'llab-quvvatlanmaydi
+mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("✅ MongoDB ulandi"))
 .catch(err => console.error("❌ MongoDB xatosi:", err));
+
+// MongoDB ulanishini kuzatish
+mongoose.connection.on('connected', () => {
+    console.log('✅ Mongoose MongoDB ga ulandi');
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('❌ Mongoose ulanish xatosi:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log('⚠️ Mongoose MongoDB dan uzildi');
+});
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -136,7 +144,6 @@ app.post('/api/open-case', async (req, res) => {
             });
         }
         
-        // Case ma'lumotlarini tekshirish
         const caseData = CASES_DATA[caseType];
         if (!caseData) {
             return res.status(400).json({ 
@@ -145,7 +152,6 @@ app.post('/api/open-case', async (req, res) => {
             });
         }
         
-        // Foydalanuvchini topish
         const user = await User.findOne({ telegramId: Number(userId) });
         if (!user) {
             return res.status(404).json({ 
@@ -154,7 +160,6 @@ app.post('/api/open-case', async (req, res) => {
             });
         }
         
-        // Balansni tekshirish
         if (user.coins < caseData.price) {
             return res.status(400).json({ 
                 success: false, 
@@ -164,7 +169,6 @@ app.post('/api/open-case', async (req, res) => {
             });
         }
         
-        // Itemlarni tekshirish
         const items = caseData.items || [];
         if (!items.length) {
             return res.status(400).json({ 
@@ -173,12 +177,10 @@ app.post('/api/open-case', async (req, res) => {
             });
         }
         
-        // Random skin tanlash (og'irlik bo'yicha - chance maydoni bo'lsa ishlatiladi)
         let wonSkin;
         const hasChances = items.some(item => item.chance !== undefined);
         
         if (hasChances) {
-            // Chance bo'yicha tanlash
             const totalChance = items.reduce((sum, item) => sum + (item.chance || 1), 0);
             let random = Math.random() * totalChance;
             let current = 0;
@@ -191,12 +193,10 @@ app.post('/api/open-case', async (req, res) => {
                 }
             }
         } else {
-            // Random tanlash
             const randomIndex = Math.floor(Math.random() * items.length);
             wonSkin = items[randomIndex];
         }
         
-        // Balansni yangilash va inventarga qo'shish
         user.coins -= caseData.price;
         user.totalOpened += 1;
         user.inventory.push({ 
@@ -209,7 +209,6 @@ app.post('/api/open-case', async (req, res) => {
         
         await user.save();
         
-        // Log
         console.log(`✅ User ${user.telegramId} opened ${caseType} case, won: ${wonSkin.name}`);
         
         res.json({
@@ -238,20 +237,21 @@ app.post('/api/open-case', async (req, res) => {
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.use(session());
 
-// Start command
+// Start command (TUZATILGAN - findOneAndUpdate dagi new option)
 bot.start(async (ctx) => {
     try {
         const firstName = ctx.from.first_name || '';
         const lastName = ctx.from.last_name || '';
         const name = `${firstName} ${lastName}`.trim() || 'User';
         
+        // Tuzatish: 'new: true' o'rniga 'returnDocument: "after"'
         const user = await User.findOneAndUpdate(
             { telegramId: ctx.from.id },
             { 
                 username: name,
                 lastActive: new Date()
             },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }  // 'new: true' o'rniga
         );
         
         const webAppUrl = process.env.BOT_WEBAPP_URL;
@@ -376,7 +376,7 @@ bot.command('stats', async (ctx) => {
     }
 });
 
-// ============ ADMIN BUYRUQLARI (3 TA ADMIN UCHUN) ============
+// ============ ADMIN BUYRUQLARI ============
 
 // Admin panel
 bot.command('admin', (ctx) => {
@@ -409,7 +409,7 @@ bot.command('admins', async (ctx) => {
     logAdminAction(ctx.from.id, 'VIEW_ADMINS');
 });
 
-// Add coins buyrug'i (tez qo'shish uchun)
+// Add coins buyrug'i
 bot.command('add_coins', async (ctx) => {
     if (!isAdmin(ctx.from.id)) return;
     
@@ -521,10 +521,8 @@ bot.on('text', async (ctx) => {
     }
 });
 
-// ============ ADMIN BUYRUQLARI TUGADI ============
-
 // --- SERVERNI UYG'OQ TUTISH (PING) ---
-const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
+const PING_INTERVAL = 10 * 60 * 1000;
 
 setInterval(() => {
     if (process.env.BOT_WEBAPP_URL) {
@@ -536,10 +534,9 @@ setInterval(() => {
     }
 }, PING_INTERVAL);
 
-// --- GLOBAL COUNTER (MongoDB da saqlash yaxshiroq) ---
+// --- GLOBAL COUNTER ---
 let globalTotalOpened = 0;
 
-// Global counter ni MongoDB dan yuklash
 async function loadGlobalCounter() {
     try {
         const total = await User.aggregate([{ $group: { _id: null, total: { $sum: "$totalOpened" } } }]);
@@ -550,10 +547,8 @@ async function loadGlobalCounter() {
     }
 }
 
-// Keys ochilganda serverga xabar yuborish
 app.post('/api/cases/open-count', async (req, res) => {
     try {
-        // Real statistikani hisoblash
         const result = await User.aggregate([{ $group: { _id: null, total: { $sum: "$totalOpened" } } }]);
         globalTotalOpened = result[0]?.total || 0;
         res.json({ total: globalTotalOpened });
@@ -563,7 +558,6 @@ app.post('/api/cases/open-count', async (req, res) => {
     }
 });
 
-// Saytga kirganda umumiy sonni olish
 app.get('/api/cases/total', async (req, res) => {
     try {
         const result = await User.aggregate([{ $group: { _id: null, total: { $sum: "$totalOpened" } } }]);
@@ -575,7 +569,6 @@ app.get('/api/cases/total', async (req, res) => {
     }
 });
 
-// User leaderboard
 app.get('/api/leaderboard', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
@@ -596,8 +589,11 @@ const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, async () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    await loadGlobalCounter();
-    console.log(`✅ Server ready! Global cases opened: ${globalTotalOpened}`);
+    // MongoDB ulanishini biroz kutib olamiz
+    setTimeout(async () => {
+        await loadGlobalCounter();
+        console.log(`✅ Server ready! Global cases opened: ${globalTotalOpened}`);
+    }, 2000);
 });
 
 // Botni ishga tushirish
@@ -623,7 +619,6 @@ process.once('SIGTERM', () => {
     process.exit(0);
 });
 
-// Error handlers
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
 });
