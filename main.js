@@ -180,6 +180,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             const color = item.price > 500 ? '#eb4b4b' : (item.price > 250 ? '#4b69ff' : '#b0c3d9');
             div.style.borderColor = color;
 
+            // startRoulette funksiyasi ichidagi qism:
             div.innerHTML = `
                 <img src="${item.image}" class="w-14 h-14 object-contain mb-1" onerror="this.src='https://via.placeholder.com/96?text=Error'">
                 <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center">${item.name}</p>
@@ -342,16 +343,30 @@ function showCaseDetail(caseId) {
     currentCaseId = caseId;
     list.classList.add('hidden');
     detail.classList.remove('hidden');
-    detail.querySelector('#detail-case-name').innerText = caseData.name;
+    
+    // Case nomi
+    const caseNameEl = detail.querySelector('#detail-case-name');
+    if (caseNameEl) caseNameEl.innerText = caseData.name;
+    
+    // Case rasmi
     const imageEl = detail.querySelector('#detail-case-image');
     if (imageEl) {
-    imageEl.src = caseData.image || 'img/default-case.png';
-    imageEl.onerror = () => { imageEl.src = 'https://via.placeholder.com/200?text=Case+Image'; };}
+        imageEl.src = caseData.image || 'https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.jpg';
+        imageEl.onerror = () => { 
+            imageEl.src = 'https://via.placeholder.com/200?text=Case+Image'; 
+        };
+    }
+    
+    // Case narxi - BU YERDA XATO BO'LGAN
+    const priceEl = detail.querySelector('#detail-case-price');
     if (priceEl) priceEl.innerText = formatCoins(caseData.price);
+    
+    // Open button narxi
     const openCasePrice = detail.querySelector('#open-case-price');
     if (openCasePrice) openCasePrice.innerText = `(${formatCoins(caseData.price)})`;
+    
     renderDetailItems(caseData);
-    tg?.expand();
+    if (tg?.expand) tg.expand();
 }
 
 function showCaseList() {
