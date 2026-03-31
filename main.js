@@ -16,6 +16,10 @@ const sanitizeSkin = (raw) => {
         image: raw?.image || 'https://via.placeholder.com/96?text=Skin'
     };
 };
+// main.js boshida
+if (typeof CASES_DATA === 'undefined') {
+    console.error('CASES_DATA yuklanmagan!');
+}
 
 let userBalance = 0;
 let isOpening = false;
