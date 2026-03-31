@@ -247,35 +247,86 @@ async function incrementGlobalCounter() {
 // Sahifa yuklanganda sonni olish
 document.addEventListener('DOMContentLoaded', updateGlobalCounter);
 
+// 1. KEYSLAR RO'YXATI
 function showKeysMenu() {
     const container = document.getElementById('main-content');
     container.innerHTML = `
-        <div class="p-4 animate-fade-in">
-            <h2 class="text-white font-black mb-6 uppercase tracking-tighter text-xl italic">Mavjud Keyslar</h2>
+        <div class="p-6 animate-fade-in">
+            <h2 class="text-white font-black mb-6 uppercase tracking-widest text-xl italic">Keyslar To'plami</h2>
             
             <div onclick="showCaseDetail('eco')" 
-                 class="relative overflow-hidden group bg-gradient-to-br from-gray-800 to-black border border-white/10 rounded-3xl p-5 cursor-pointer active:scale-95 transition-all shadow-2xl">
-                
-                <div class="flex items-center justify-between relative z-10">
-                    <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 bg-yellow-400/10 rounded-2xl flex items-center justify-center border border-yellow-400/20">
-                            <img src="https://community.fastly.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXU5A1PIYQNkHpOSV-fRPasw8rsUFJ5KBFpre_6a1Y10f33YzxG64mJx9PZkvS3YrnXlD5X7p0j2b6S9Nis0VHt_RE-Z2vxc9uXJlA8YVvU-lS-l7_ugpC06p_BnHU363V34S7D30vgke_vbiY/62fx62f" 
-                                 class="w-12 h-12 object-contain group-hover:scale-110 transition-transform">
-                        </div>
+                 class="relative overflow-hidden bg-gray-900 border border-white/10 rounded-[2rem] p-6 cursor-pointer active:scale-95 transition-all shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-5">
+                        <img src="img/eco_case_icon.png" class="w-16 h-16 object-contain">
                         <div>
-                            <p class="text-white font-black text-lg tracking-tight">ECO CASE</p>
-                            <p class="text-yellow-400 font-bold text-xs">500 🪙 <span class="text-white/30 ml-2">OCHISH</span></p>
+                            <p class="text-white font-black text-xl italic">ECO CASE</p>
+                            <p class="text-blue-400 font-bold text-sm uppercase tracking-tighter">Premium Collection</p>
                         </div>
                     </div>
-                    <div class="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-yellow-400 transition-colors">
-                        <span class="text-white group-hover:text-black font-bold">❯</span>
-                    </div>
+                    <div class="text-yellow-400 font-black text-lg">500 🪙</div>
                 </div>
-                
-                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-yellow-400/5 rounded-full blur-2xl"></div>
             </div>
         </div>
     `;
+}
+
+// 2. KEYS ICHKI QISMI (100VH VA SCROLL)
+function showCaseDetail(caseId) {
+    const caseData = CASES_DATA[caseId];
+    const container = document.getElementById('main-content');
+
+    const itemsHTML = caseData.items.map(item => `
+        <div class="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center relative">
+            <img src="${item.image}" class="w-16 h-16 object-contain mb-2">
+            <p class="text-[8px] text-white/40 font-bold uppercase truncate w-full text-center">${item.name}</p>
+            <p class="text-[10px] text-yellow-400 font-black mt-1">${item.price} 🪙</p>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth">
+            
+            <section class="case-hero snap-start relative">
+                <button onclick="showKeysMenu()" class="absolute top-6 left-6 z-50 bg-black/50 p-3 rounded-full text-white/70 text-xs font-bold backdrop-blur-md">❮ ORQAGA</button>
+                
+                <div class="absolute top-6 right-6 text-right">
+                    <p id="global-counter" class="text-white font-black text-xl leading-none">0</p>
+                    <p class="text-[8px] text-blue-400 font-bold tracking-widest uppercase">Ochildi</p>
+                </div>
+
+                <div class="mb-8 text-center">
+                    <img src="img/eco_case_big.png" class="w-48 h-48 object-contain mx-auto drop-shadow-[0_0_50px_rgba(59,130,246,0.3)] animate-pulse">
+                    <h1 class="text-white font-black text-4xl italic mt-4 tracking-tighter uppercase">${caseData.name}</h1>
+                </div>
+
+                <div class="w-full px-10 max-w-md">
+                    <button id="openBtn" onclick="handleOpenCase('${caseId}')" 
+                            class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-[0_10px_40px_rgba(37,99,235,0.4)] active:scale-95 transition-all text-lg">
+                        OCHISH <span class="ml-2 opacity-50">| ${caseData.price} 🪙</span>
+                    </button>
+                </div>
+
+                <div class="absolute bottom-10 flex flex-col items-center scroll-down-indicator">
+                    <p class="text-white/20 text-[10px] font-bold mb-2 uppercase tracking-widest">Skinlarni ko'rish</p>
+                    <div class="w-1 h-6 bg-gradient-to-b from-blue-500 to-transparent rounded-full"></div>
+                </div>
+            </section>
+
+            <section class="p-6 bg-black snap-start min-h-screen">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-white/30 font-black text-xs uppercase tracking-[0.3em]">Keys ichidagi buyumlar</h3>
+                    <div class="h-[1px] flex-1 bg-white/10 ml-4"></div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3">
+                    ${itemsHTML}
+                </div>
+            </section>
+        </div>
+    `;
+    
+    updateGlobalCounter();
 }
 
 function showCaseDetail(caseId) {
