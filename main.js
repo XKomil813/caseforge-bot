@@ -94,7 +94,10 @@ async function openCase() {
         if (payload.wonSkin) {
             userInventory.unshift(payload.wonSkin);
             renderInventory();
-            startRoulette(payload.wonSkin, caseData.items, openBtn, statusDisplay);
+            const pool = Array.isArray(caseData.items) && caseData.items.length
+                ? caseData.items
+                : [payload.wonSkin];
+            startRoulette(payload.wonSkin, pool, openBtn, statusDisplay);
         } else {
             throw new Error("Yutuq uchun ma'lumot yo'q");
         }
@@ -145,7 +148,8 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
     const itemWidth = 112;
 
     for (let i = 0; i < totalItems; i++) {
-        const item = i === winningIndex ? wonSkin : itemsPool[Math.floor(Math.random() * itemsPool.length)];
+        const rawItem = i === winningIndex ? wonSkin : itemsPool[Math.floor(Math.random() * itemsPool.length)];
+        const item = rawItem && rawItem.image ? rawItem : { image: rawItem?.image || 'https://via.placeholder.com/64?text=?', name: rawItem?.name || '???', price: rawItem?.price || 0 };
         const div = document.createElement('div');
         div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
 
