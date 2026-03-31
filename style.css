@@ -47,3 +47,15 @@
         box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
     }
 }
+
+
+ body { 
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        overflow-x: hidden;
+    }
+    .app-shell {
+        min-height: 100vh;
+        height: auto;
+    }

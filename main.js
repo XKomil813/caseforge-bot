@@ -529,6 +529,25 @@ function renderDetailItems(caseData) {
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing...");
+    // FULLSCREEN UCHUN
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        
+        // Expand qilish
+        tg.expand();
+        
+        // Main buttonni yashirish
+        if (tg.MainButton) tg.MainButton.hide();
+        
+        // Background color
+        tg.setBackgroundColor("#08090d");
+        tg.setHeaderColor("bg_color");
+        
+        // Ready
+        tg.ready();
+        
+        console.log("Telegram WebApp expanded");
+    }
     console.log("CASES_DATA loaded:", typeof window.CASES_DATA !== 'undefined');
     
     loadUserData();

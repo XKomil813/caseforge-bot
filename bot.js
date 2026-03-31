@@ -255,7 +255,7 @@ bot.start(async (ctx) => {
             { upsert: true, returnDocument: 'after' }  // 'new: true' o'rniga
         );
         
-        const webAppUrl = process.env.BOT_WEBAPP_URL;
+        const webAppUrl = process.env.BOT_WEBAPP_URL + '?startapp=fullscreen';
         if (!webAppUrl) {
             console.error('BOT_WEBAPP_URL environment variable not set!');
             return ctx.reply('❌ Bot sozlamalarida xatolik. Iltimos administratorga murojaat qiling.');
