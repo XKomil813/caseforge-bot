@@ -139,28 +139,25 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
     const itemsContainer = document.getElementById('roulette-items');
     const parentContainer = document.getElementById('roulette-container');
 
-    // 1. Asosiy elementlar borligini va wonSkin kelganini tekshiramiz
+    // 1. Elementlar va wonSkin borligini qat'iy tekshiramiz
     if (!itemsContainer || !parentContainer || !wonSkin) {
-        console.error("Roulette xatosi: Elementlar yoki wonSkin topilmadi", { wonSkin });
+        console.error("Xatolik: Ruletka uchun ma'lumot yetarli emas!", {wonSkin});
         setButtonState(openBtn, false);
         isOpening = false;
         return;
     }
 
     try {
-        // 2. Skin ma'lumotlarini tekshirish uchun yordamchi funksiya
-        const getSafeItem = (item) => {
-            return {
-                name: item?.name || "Noma'lum skin",
-                price: item?.price || 0,
-                image: item?.image || "https://via.placeholder.com/64?text=No+Image"
-            };
-        };
+        // 2. Skin ma'lumotlarini xavfsiz holatga keltiruvchi yordamchi funksiya
+        const getSafe = (s) => ({
+            name: s?.name || "Noma'lum Skin",
+            price: s?.price || 0,
+            image: s?.image || 'https://via.placeholder.com/96?text=No+Img'
+        });
 
-        const safeWin = getSafeItem(wonSkin);
-        
-        // 3. Pool (ruletkadagi boshqa skinlar) bo'sh bo'lsa, yutilgan skinni o'zini ishlatsin
-        const pool = (itemsPool && itemsPool.length > 0) 
+        const safeWonSkin = getSafe(wonSkin);
+        // Pool bo'sh bo'lsa, kamida yutilgan skinni ishlatsin
+        const safePool = (Array.isArray(itemsPool) && itemsPool.length > 0) 
             ? itemsPool.filter(Boolean) 
             : [wonSkin];
 
@@ -173,25 +170,25 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
         const itemWidth = 112;
 
         for (let i = 0; i < totalItems; i++) {
-            // Tasodifiy yoki yutilgan skinni tanlash
-            const rawItem = i === winningIndex ? wonSkin : pool[Math.floor(Math.random() * pool.length)];
-            const item = getSafeItem(rawItem); // Ma'lumotni xavfsiz holatga keltiramiz
+            // Tasodifiy skin tanlash
+            const rawItem = i === winningIndex ? wonSkin : safePool[Math.floor(Math.random() * safePool.length)];
+            const item = getSafe(rawItem); // BU YERDA XATO BO'LMAYDI
 
             const div = document.createElement('div');
             div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
-
+            
             const color = item.price > 500 ? '#eb4b4b' : (item.price > 250 ? '#4b69ff' : '#b0c3d9');
             div.style.borderColor = color;
 
             div.innerHTML = `
-                <img src="${item.image}" class="w-14 h-14 object-contain mb-1" onerror="this.src='https://via.placeholder.com/64?text=Error'">
+                <img src="${item.image}" class="w-14 h-14 object-contain mb-1" onerror="this.src='https://via.placeholder.com/96?text=Error'">
                 <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center">${item.name}</p>
                 <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(item.price)}</p>
             `;
             itemsContainer.appendChild(div);
         }
 
-        // Animatsiyani boshlash
+        // Animatsiya qismi
         setTimeout(() => {
             const parentWidth = parentContainer.offsetWidth;
             const targetOffset = (winningIndex * itemWidth) - (parentWidth / 2) + (itemWidth / 2);
@@ -199,13 +196,12 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             itemsContainer.style.left = `-${targetOffset}px`;
         }, 50);
 
-        // Tugatish
         setTimeout(() => {
             if (statusDisplay) {
                 statusDisplay.innerHTML = `
                     <div class="flex flex-col items-center animate-bounce">
                         <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
-                        <span class="text-[10px] text-white font-bold uppercase">${safeWin.name}</span>
+                        <span class="text-[10px] text-white font-bold uppercase">${safeWonSkin.name}</span>
                     </div>
                 `;
                 resetStatusAfterDelay(statusDisplay, 4000);
@@ -215,7 +211,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
         }, 5500);
 
     } catch (err) {
-        console.error('Roulette render xatosi:', err);
+        console.error('Ruletka xatosi:', err);
         setButtonState(openBtn, false);
         isOpening = false;
     }
