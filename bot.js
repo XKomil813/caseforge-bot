@@ -124,7 +124,7 @@ bot.start(async (ctx) => {
     { upsert: true, new: true }
   );
   
-  ctx.reply(`✨ CaseForge v1.0.4\n👤 Foydalanuvchi: ${name}\n💰 Balans: ${user.coins.toFixed(2)} coin`,
+  ctx.reply(`👤 Foydalanuvchi: ${name}\n💰 Balans: ${user.coins.toFixed(2)} coin`,
     Markup.inlineKeyboard([[
         Markup.button.webApp("🎮 O'yinni ochish", process.env.BOT_WEBAPP_URL)
     ]])

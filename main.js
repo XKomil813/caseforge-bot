@@ -369,13 +369,16 @@ function showCaseList() {
 function renderDetailItems(caseData) {
     const detailItems = document.getElementById('detail-items');
     if (!detailItems || !caseData?.items) return;
-    detailItems.innerHTML = caseData.items.map(item => `
-        <div class="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center">
-            <img src="${item.image}" class="w-14 h-14 object-contain mb-2">
-            <p class="text-[7px] text-white/50 font-bold uppercase text-center">${item.name}</p>
-            <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(item.price)}</p>
-        </div>
-    `).join('');
+    detailItems.innerHTML = caseData.items.map(item => {
+        const safe = sanitizeSkin(item);
+        return `
+            <div class="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center">
+                <img src="${safe.image}" class="w-14 h-14 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=No+Img'">
+                <p class="text-[7px] text-white/50 font-bold uppercase text-center">${safe.name}</p>
+                <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(safe.price)}</p>
+            </div>
+        `;
+    }).join('');
 }
 
 function renderInventory() {
