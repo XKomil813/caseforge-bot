@@ -6,6 +6,8 @@ const CASE_TYPE = 'eco';
 const DEFAULT_CASE_ID = CASE_TYPE;
 let currentCaseId = DEFAULT_CASE_ID;
 const DEFAULT_STATUS = "OCHISHGA TAYYOR";
+const CURRENCY_LABEL = "coin";
+const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} ${CURRENCY_LABEL}`;
 
 let userBalance = 0;
 let isOpening = false;
@@ -37,7 +39,7 @@ async function loadUserData() {
 
 function updateBalanceDisplay() {
     const display = document.getElementById('balance-display');
-    if (display) display.innerText = `${Math.floor(userBalance)} coin`;
+    if (display) display.innerText = formatCoins(Math.floor(userBalance));
 }
 
 function setButtonState(btn, disabled) {
@@ -213,23 +215,29 @@ function setupKeysSection() {
     const markup = `
         <div class="glass border border-white/10 p-6 rounded-[32px] text-center shadow-2xl space-y-6">
             <div id="keys-list" class="space-y-4">
-                <div data-case-id="eco" class="case-card relative overflow-hidden border border-white/10 rounded-[28px] p-4 bg-gradient-to-br from-white/5 to-transparent cursor-pointer hover:border-blue-500 transition-all">
+${['eco','budget'].map(id => {
+    const c = CASES_DATA[id];
+    if (!c) return '';
+    return `
+                <div data-case-id="${id}" class="case-card relative overflow-hidden border border-white/10 rounded-[28px] p-4 bg-gradient-to-br from-white/5 to-transparent cursor-pointer hover:border-blue-500 transition-all">
                     <div class="flex items-center justify-between gap-4">
                         <div class="text-left">
                             <p class="text-[10px] font-gaming uppercase tracking-[0.4em] text-blue-400">Keyslar</p>
-                            <h3 class="text-2xl font-black uppercase font-gaming tracking-tighter text-white mt-1">Eco Case</h3>
+                            <h3 class="text-2xl font-black uppercase font-gaming tracking-tighter text-white mt-1">${c.name}</h3>
                             <p class="text-[9px] text-gray-500 mt-1">Eng yengil case | 20+ skin</p>
                         </div>
-                        <div class="text-right">
-                            <p class="text-yellow-400 font-black text-lg">${CASES_DATA.eco?.price ?? 0} coin</p>
-                            <p class="text-[8px] uppercase tracking-[0.6em] text-gray-400">Bir marta</p>
+                        <div class="flex items-center gap-1 justify-end text-right">
+                            <span class="material-icons-outlined text-yellow-400 text-base align-middle">monetization_on</span>
+                            <p class="text-yellow-400 font-black text-lg">${formatCoins(c.price)}</p>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center justify-center">
-                        <img src="${CASES_DATA.eco?.image || 'https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.png'}" class="h-24 object-contain">
+                        <img src="${c.image || 'https://raw.githubusercontent.com/XKomil813/caseforge-bot/main/case-img/eco-case.png'}" class="h-24 object-contain">
                     </div>
-                    <div class="mt-2 text-[9px] uppercase text-white/70 tracking-[0.3em]">Batafsil korish uchun bosing</div>
+                    <div class="mt-2 text-[9px] uppercase text-white/70 tracking-[0.3em]">Batafsil ko'rish uchun bosing</div>
                 </div>
+    `;
+}).join('')}
             </div>
 
             <div id="case-detail" class="hidden space-y-6 text-left">
@@ -242,7 +250,7 @@ function setupKeysSection() {
                             <p id="detail-case-name" class="text-lg font-black uppercase font-gaming text-white">Eco Case</p>
                             <button data-action="back" class="text-[10px] uppercase tracking-[0.4em] text-blue-400">ORQAGA</button>
                         </div>
-                        <p id="detail-case-price" class="text-[12px] tracking-[0.3em] text-yellow-400 font-bold">${CASES_DATA.eco?.price ?? 0} coin</p>
+                        <p id="detail-case-price" class="text-[12px] tracking-[0.3em] text-yellow-400 font-bold">${formatCoins(CASES_DATA.eco?.price ?? 0)}</p>
                     </div>
                 </div>
 
@@ -267,7 +275,7 @@ function setupKeysSection() {
 
                 <button id="openBtn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl font-gaming font-bold text-base tracking-[1px] shadow-xl shadow-blue-900/30 active:scale-95 transition-all flex items-center justify-center space-x-2">
                     <span>KEYSNI OCHISH</span>
-                    <span class="text-yellow-400 text-xs" id="open-case-price">(${CASES_DATA.eco?.price ?? 0} coin)</span>
+                    <span class="text-yellow-400 text-xs" id="open-case-price">(${formatCoins(CASES_DATA.eco?.price ?? 0)})</span>
                 </button>
             </div>
         </div>
