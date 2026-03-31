@@ -3,10 +3,10 @@ const tg = window.Telegram ? window.Telegram.WebApp : null;
 const RENDER_URL = 'https://caseforge-bot.onrender.com';
 const userId = tg?.initDataUnsafe?.user?.id || "64537281"; 
 
-let userBalance = 0; // Global balans
-let userInventory = []; // Global inventar
+let userBalance = 0; 
+let userInventory = []; 
 
-// 2. FOYDALANUVCHI MA'LUMOTLARI (Yuklash va Yangilash)
+// 2. FOYDALANUVCHI MA'LUMOTLARI
 async function loadUserData() {
     if (!userId) return;
     try {
@@ -41,7 +41,6 @@ async function openCase() {
     const statusDisplay = document.getElementById('status-text');
     const openBtn = document.getElementById('openBtn');
     
-    // 1. Balansni tekshirish (Masalan, 500 tanga)
     if (userBalance < 500) {
         if (statusDisplay) {
             statusDisplay.innerHTML = '<span class="text-red-500 animate-bounce">MABLAG\' YETARLI EMAS!</span>';
@@ -50,28 +49,26 @@ async function openCase() {
         return;
     }
 
-    // 2. Tugmani bloklash
-    openBtn.disabled = true;
-    openBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    if (openBtn) {
+        openBtn.disabled = true;
+        openBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
 
     if (statusDisplay) {
         statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic">KEYS OCHILMOQDA...</span>';
     }
 
-    // 3. Balansdan ayirish
     userBalance -= 500;
     updateBalanceDisplay();
 
-    // 4. Tasodifiy skinni tanlash (CASES_DATA mavjudligini tekshirish kerak)
     if (typeof CASES_DATA === 'undefined' || !CASES_DATA['eco']) {
-        console.error("CASES_DATA topilmadi! cases.js ulanmagan bo'lishi mumkin.");
+        console.error("CASES_DATA topilmadi!");
         return;
     }
     
     const items = CASES_DATA['eco'].items;
     const wonSkin = items[Math.floor(Math.random() * items.length)];
 
-    // 5. RULETKANI ISHGA TUSHIRISH
     startRoulette(wonSkin); 
 }
 
@@ -113,7 +110,6 @@ function startRoulette(wonSkin) {
         itemsContainer.style.left = `-${targetOffset}px`;
     }, 50);
 
-    // NATIJA
     setTimeout(() => {
         const statusDisplay = document.getElementById('status-text');
         const openBtn = document.getElementById('openBtn');
@@ -131,13 +127,10 @@ function startRoulette(wonSkin) {
             openBtn.disabled = false;
             openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
-
-        // Inventarga qo'shish va saqlash funksiyangizni bu yerga qo'ying
-        // saveWonSkin(wonSkin); 
     }, 5500);
 }
 
-// 4. VAZIFALAR VA REFERAL (Siz yuborgan mantiq saqlab qolindi)
+// 4. VAZIFALAR (DAILY REWARD)
 let streak = parseInt(localStorage.getItem('userStreak')) || 0;
 let timerStartTime = parseInt(localStorage.getItem('timerStart')) || 0;
 const rewards = [20, 50, 80, 120, 150, 180, 200];
@@ -150,7 +143,7 @@ function handleRewardClick() {
         timerStartTime = now;
         localStorage.setItem('timerStart', timerStartTime);
         startVisualTimer('reward-btn', oneDay, timerStartTime);
-        alert("Tekshirish boshlandi! 24 soatdan keyin qayting.");
+        alert("Tekshirish boshlandi!");
     } else if (now - timerStartTime >= oneDay) {
         streak++;
         localStorage.setItem('userStreak', streak);
@@ -181,7 +174,6 @@ function startVisualTimer(btnId, duration, startTime) {
         const m = Math.floor((timeLeft % 3600000) / 60000);
         const s = Math.floor((timeLeft % 60000) / 1000);
         btn.innerText = `${h}:${m}:${s}`;
-        btn.classList.add('bg-gray-700');
     }, 1000);
 }
 
@@ -189,16 +181,19 @@ function updateUI() {
     const btn = document.getElementById('reward-btn');
     if(btn && timerStartTime === 0) {
         btn.innerText = `+${rewards[Math.min(streak, 6)]} 🪙`;
-        btn.classList.remove('bg-gray-700');
     }
 }
 
-// 5. INITIALIZATION
+// 5. INITIALIZATION (TUGATILGAN QISMI)
 document.addEventListener('DOMContentLoaded', () => {
     loadUserData();
     updateUI();
     
-    if (openBtn) openBtn.addEventListener('click', openCase);
+    // Tugmani DOM'dan qayta qidiramiz
+    const mainOpenBtn = document.getElementById('openBtn');
+    if (mainOpenBtn) {
+        mainOpenBtn.addEventListener('click', openCase);
+    }
 
     if (timerStartTime !== 0) {
         const now = Date.now();
@@ -211,9 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// MODAL VA NAVIGATSIYA
-window.openTaskModal = () => document.getElementById('taskModal')?.classList.remove('hidden');
-window.closeTaskModal = () => document.getElementById('taskModal')?.classList.add('hidden');
+// NAVIGATSIYA
 window.showSection = function(sectionId, element) {
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById(sectionId);
