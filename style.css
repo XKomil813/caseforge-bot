@@ -16,3 +16,33 @@
     40% {transform: translateY(-10px);}
     60% {transform: translateY(-5px);}
 }
+
+.app-shell {
+    width: min(100%, 420px);
+    padding: 0 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .app-shell {
+        width: min(100%, 720px);
+        padding: 0 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .app-shell {
+        width: min(100%, 1100px);
+        padding: 0 3rem;
+    }
+
+    .app-nav {
+        position: static;
+        transform: none;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        margin: 2rem auto 0;
+        border-radius: 9999px;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+    }
+}
