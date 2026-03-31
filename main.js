@@ -66,7 +66,7 @@ async function openCase() {
 
     if (userBalance < price) {
         if (statusDisplay) {
-            statusDisplay.innerHTML = '<span class="text-red-500 animate-bounce font-black text-[10px]">MABLAG\\' YETARLI EMAS!</span>';
+            statusDisplay.innerHTML = '<span class="text-red-500 animate-bounce font-black text-[10px]">MABLAG\' YETARLI EMAS!</span>';
             resetStatusAfterDelay(statusDisplay);
         }
         return;
