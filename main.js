@@ -26,7 +26,6 @@ const createSafeSkin = (skin) => {
         image: skin.image || "https://via.placeholder.com/96?text=No+Image"
     };
 };
-
 // Global state
 let userBalance = 0;
 let isOpening = false;
