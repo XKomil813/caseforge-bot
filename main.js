@@ -76,6 +76,13 @@ async function openCase() {
     const caseData = CASES_DATA?.[caseId];
     if (!caseData) {
         console.error("Case ma'lumotlari topilmadi:", caseId);
+        const statusDisplay = document.getElementById('status-text');
+        if (statusDisplay) {
+            statusDisplay.innerHTML = '<span class="text-red-500">Case topilmadi!</span>';
+            setTimeout(() => {
+                if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
+            }, 2000);
+        }
         return;
     }
 
@@ -85,133 +92,233 @@ async function openCase() {
 
     if (userBalance < price) {
         if (statusDisplay) {
-            statusDisplay.innerHTML = '<span class="text-red-500 animate-bounce font-black text-[10px]">MABLAG\' YETARLI EMAS!</span>';
-            resetStatusAfterDelay(statusDisplay);
+            statusDisplay.innerHTML = '<span class="text-red-500 animate-bounce font-black text-[10px]">❌ MABLAG\' YETARLI EMAS!</span>';
+            setTimeout(() => {
+                if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
+            }, 2500);
         }
         return;
     }
 
     isOpening = true;
-    setButtonState(openBtn, true);
+    if (openBtn) {
+        openBtn.disabled = true;
+        openBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
     if (statusDisplay) {
-        statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic">KEYS OCHILMOQDA...</span>';
+        statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic">🎲 KEYS OCHILMOQDA...</span>';
     }
 
     try {
         const payload = await requestOpenCase(caseId);
+        
+        // Yangi balansni yangilash
         userBalance = Math.max(Number(payload.newBalance ?? userBalance - price), 0);
         updateBalanceDisplay();
 
-        const safeWon = sanitizeSkin(payload.wonSkin);
+        // Yutilgan skin ni tekshirish
+        if (!payload.wonSkin) {
+            throw new Error("Yutilgan skin ma'lumoti yo'q");
+        }
+        
+        const safeWon = {
+            name: payload.wonSkin.name || "Noma'lum Skin",
+            price: payload.wonSkin.price || 0,
+            image: payload.wonSkin.image || "https://via.placeholder.com/96?text=Skin"
+        };
+        
         userInventory.unshift(safeWon);
         renderInventory();
         
         const pool = (Array.isArray(caseData.items) ? caseData.items : [])
-            .filter(Boolean)
-            .map(sanitizeSkin);
-        if (!pool.length) pool.push(safeWon);
+            .filter(item => item !== null && item !== undefined)
+            .map(item => ({
+                name: item.name || "Noma'lum Skin",
+                price: item.price || 0,
+                image: item.image || "https://via.placeholder.com/96?text=Skin"
+            }));
+            
+        if (pool.length === 0) {
+            pool.push(safeWon);
+        }
         
         startRoulette(safeWon, pool, openBtn, statusDisplay);
         incrementGlobalCounter();
+        
     } catch (error) {
-        console.error("openCase:", error);
+        console.error("openCase xatosi:", error);
         if (statusDisplay) {
-            statusDisplay.innerHTML = `<span class="text-red-500 font-black text-[10px]">Xatolik: ${error.message || 'Server xatosi'}</span>`;
-            resetStatusAfterDelay(statusDisplay, 3000);
+            statusDisplay.innerHTML = `<span class="text-red-500 font-black text-[10px]">❌ Xatolik: ${error.message || 'Server xatosi'}</span>`;
+            setTimeout(() => {
+                if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
+            }, 3000);
         }
-        setButtonState(openBtn, false);
+        if (openBtn) {
+            openBtn.disabled = false;
+            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
         isOpening = false;
     }
 }
 
 async function requestOpenCase(caseType) {
-    const response = await fetch(`${RENDER_URL}/api/open-case`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, caseType })
-    });
+    try {
+        const response = await fetch(`${RENDER_URL}/api/open-case`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, caseType })
+        });
 
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.success) {
-        throw new Error(data.message || `Server holati: ${response.status}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server xatosi: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || "Case ochishda xatolik");
+        }
+        
+        // wonSkin ni tekshirish
+        if (!data.wonSkin) {
+            throw new Error("Yutilgan skin ma'lumoti yo'q");
+        }
+        
+        return data;
+    } catch (error) {
+        console.error("requestOpenCase error:", error);
+        throw error;
     }
-    return data;
 }
 
 function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
     const itemsContainer = document.getElementById('roulette-items');
     const parentContainer = document.getElementById('roulette-container');
 
-    if (!itemsContainer || !parentContainer || !wonSkin) {
-        console.error("Ruletka uchun ma'lumot yetarli emas!");
-        setButtonState(openBtn, false);
+    // Xavfsizlik tekshiruvi
+    if (!itemsContainer || !parentContainer) {
+        console.error("Ruletka elementlari topilmadi!");
+        if (statusDisplay) {
+            statusDisplay.innerHTML = '<span class="text-red-500">Xatolik: Element topilmadi</span>';
+            setTimeout(() => {
+                if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
+            }, 2000);
+        }
+        if (openBtn) {
+            openBtn.disabled = false;
+            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
         isOpening = false;
         return;
     }
 
     try {
-        const getSafe = (s) => ({
-            name: s?.name || "Noma'lum Skin",
-            price: s?.price || 0,
-            image: s?.image || 'https://via.placeholder.com/96?text=No+Img'
-        });
+        // Xavfsiz skin yaratish funksiyasi
+        const getSafeSkin = (skin) => {
+            if (!skin) {
+                return {
+                    name: "Noma'lum Skin",
+                    price: 0,
+                    image: "https://via.placeholder.com/96?text=No+Image"
+                };
+            }
+            return {
+                name: skin.name || "Noma'lum Skin",
+                price: skin.price || 0,
+                image: skin.image || "https://via.placeholder.com/96?text=No+Image"
+            };
+        };
 
-        const safeWonSkin = getSafe(wonSkin);
-        const safePool = (Array.isArray(itemsPool) && itemsPool.length > 0) 
-            ? itemsPool.filter(Boolean) 
-            : [wonSkin];
+        const safeWonSkin = getSafeSkin(wonSkin);
+        
+        // ItemsPool ni xavfsiz holatga keltirish
+        let safePool = [];
+        if (Array.isArray(itemsPool) && itemsPool.length > 0) {
+            safePool = itemsPool.filter(item => item !== null && item !== undefined).map(item => getSafeSkin(item));
+        }
+        
+        // Agar pool bo'sh bo'lsa, yutilgan skin qo'shiladi
+        if (safePool.length === 0 && safeWonSkin) {
+            safePool.push(safeWonSkin);
+        }
 
         itemsContainer.innerHTML = '';
         itemsContainer.style.transition = 'none';
         itemsContainer.style.left = '0px';
 
-        const totalItems = 60;
-        const winningIndex = 50;
+        const totalItems = 30; // Kamaytirdim, tezroq ishlashi uchun
+        const winningIndex = 25;
         const itemWidth = 112;
 
         for (let i = 0; i < totalItems; i++) {
-            const rawItem = i === winningIndex ? wonSkin : safePool[Math.floor(Math.random() * safePool.length)];
-            const item = getSafe(rawItem);
+            let item;
+            if (i === winningIndex) {
+                item = safeWonSkin;
+            } else {
+                // Random skin tanlash
+                const randomIndex = Math.floor(Math.random() * safePool.length);
+                item = safePool[randomIndex] || safeWonSkin;
+            }
+            
+            // Har bir item ni xavfsiz holatga keltirish
+            const safeItem = getSafeSkin(item);
 
             const div = document.createElement('div');
             div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
             
-            const color = item.price > 500 ? '#eb4b4b' : (item.price > 250 ? '#4b69ff' : '#b0c3d9');
+            const color = safeItem.price > 500 ? '#eb4b4b' : (safeItem.price > 250 ? '#4b69ff' : '#b0c3d9');
             div.style.borderColor = color;
 
             div.innerHTML = `
-                <img src="${item.image}" class="w-14 h-14 object-contain mb-1" onerror="this.src='https://via.placeholder.com/96?text=Error'">
-                <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center">${item.name.substring(0, 20)}</p>
-                <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(item.price)}</p>
+                <img src="${safeItem.image}" class="w-14 h-14 object-contain mb-1" onerror="this.src='https://via.placeholder.com/96?text=Error'">
+                <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center truncate">${safeItem.name.substring(0, 20)}</p>
+                <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(safeItem.price)}</p>
             `;
             itemsContainer.appendChild(div);
         }
 
+        // Animatsiya
         setTimeout(() => {
             const parentWidth = parentContainer.offsetWidth;
             const targetOffset = (winningIndex * itemWidth) - (parentWidth / 2) + (itemWidth / 2);
-            itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
-            itemsContainer.style.left = `-${targetOffset}px`;
+            itemsContainer.style.transition = 'left 4s cubic-bezier(0.1, 0, 0.05, 1)';
+            itemsContainer.style.left = `-${Math.max(0, targetOffset)}px`;
         }, 50);
 
+        // Natijani ko'rsatish
         setTimeout(() => {
             if (statusDisplay) {
                 statusDisplay.innerHTML = `
                     <div class="flex flex-col items-center animate-bounce">
-                        <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
-                        <span class="text-[10px] text-white font-bold uppercase">${safeWonSkin.name}</span>
-                        <span class="text-[9px] text-yellow-400">${formatCoins(safeWonSkin.price)}</span>
+                        <span class="text-green-400 font-black text-[12px]">🎉 TABRIKLAYMIZ! 🎉</span>
+                        <span class="text-[11px] text-white font-bold uppercase mt-1">${safeWonSkin.name}</span>
+                        <span class="text-[10px] text-yellow-400 font-bold">${formatCoins(safeWonSkin.price)}</span>
                     </div>
                 `;
-                resetStatusAfterDelay(statusDisplay, 4000);
+                setTimeout(() => {
+                    if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
+                }, 4000);
             }
-            setButtonState(openBtn, false);
+            if (openBtn) {
+                openBtn.disabled = false;
+                openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
             isOpening = false;
-        }, 5500);
+        }, 4500);
 
     } catch (err) {
         console.error('Ruletka xatosi:', err);
-        setButtonState(openBtn, false);
+        if (statusDisplay) {
+            statusDisplay.innerHTML = '<span class="text-red-500">Xatolik yuz berdi, qayta urinib ko\'ring</span>';
+            setTimeout(() => {
+                if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
+            }, 3000);
+        }
+        if (openBtn) {
+            openBtn.disabled = false;
+            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
         isOpening = false;
     }
 }
