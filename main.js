@@ -37,27 +37,41 @@ async function loadUserData() {
 
 // 3. RULETKA VA KEYS OCHISH (Optimallashgan)
 async function openCase() {
-    if (!userId) return;
-    statusText.innerHTML = '<span class="text-blue-400 animate-pulse text-[10px]">KEYSNI OCHILMOQDA...</span>';
-    openBtn.disabled = true;
-
-    try {
-        const response = await fetch(`${RENDER_URL}/api/open-case?t=${Date.now()}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: userId, caseType: 'eco' })
-        });
-        const data = await response.json();
-        if (data.success) {
-            startRoulette(data.wonSkin);
-        } else {
-            statusText.innerHTML = `<span class="text-red-500 text-[10px]">${data.message}</span>`;
-            openBtn.disabled = false;
+    const statusDisplay = document.getElementById('status-text');
+    const openBtn = document.getElementById('openBtn');
+    
+    // 1. Balansni tekshirish (Masalan, 500 tanga)
+    if (userBalance < 500) {
+        if (statusDisplay) {
+            statusDisplay.innerHTML = '<span class="text-red-500 animate-bounce">MABLAG\' YETARLI EMAS!</span>';
+            setTimeout(() => { statusDisplay.innerText = "OCHISHGA TAYYOR"; }, 2000);
         }
-    } catch (e) {
-        statusText.innerHTML = '<span class="text-red-500 text-[10px]">ALOQA XATOSI</span>';
-        openBtn.disabled = false;
+        return;
     }
+
+    // 2. Tugmani bloklash (ikki marta bosilmasligi uchun)
+    openBtn.disabled = true;
+    openBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    if (statusDisplay) {
+        statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic">KEYS OCHILMOQDA...</span>';
+    }
+
+    // 3. Balansdan pul yechish (Sizning load/save funksiyalaringizga qarab)
+    userBalance -= 500;
+    updateBalanceDisplay(); // Balansni ekranda yangilash funksiyasi
+
+    // 4. Tasodifiy skinni tanlash (ECO case misolida)
+    const items = CASES_DATA['eco'].items;
+    const wonSkin = items[Math.floor(Math.random() * items.length)];
+
+    // 5. RULETKANI ISHGA TUSHIRISH
+    console.log("Yutilgan skin:", wonSkin.name);
+    startRoulette(wonSkin); 
+
+    // 6. Invertarga qo'shish
+    userInventory.push({ ...wonSkin, id: Date.now() });
+    saveUserData(); // Ma'lumotlarni saqlash
 }
 
 function startRoulette(wonSkin) {
@@ -96,11 +110,15 @@ function startRoulette(wonSkin) {
         itemsContainer.appendChild(div);
     }
 
-    setTimeout(() => {
-    const itemFullWidth = 112; 
-    const parentWidth = parentContainer.offsetWidth;
-    const targetOffset = (winningIndex * itemFullWidth) - (parentWidth / 2) + (itemFullWidth / 2);
+// startRoulette funksiyasi ichida:
+setTimeout(() => {
+    const itemFullWidth = 112; // skin eni + margin
+    const parentWidth = document.getElementById('roulette-container').offsetWidth;
     
+    // Markazga to'g'irlash
+    const targetOffset = (50 * itemFullWidth) - (parentWidth / 2) + (itemFullWidth / 2);
+    
+    const itemsContainer = document.getElementById('roulette-items');
     itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
     itemsContainer.style.left = `-${targetOffset}px`;
 }, 50);
