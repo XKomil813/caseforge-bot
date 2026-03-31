@@ -221,7 +221,7 @@ function setupKeysSection() {
                             <p class="text-[9px] text-gray-500 mt-1">Eng yengil case | 20+ skin</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-yellow-400 font-black text-lg">500 Ñ€ÑŸÐ„â„¢</p>
+                            <p class="text-yellow-400 font-black text-lg">${CASES_DATA.eco?.price ?? 0} Coin</p>
                             <p class="text-[8px] uppercase tracking-[0.6em] text-gray-400">Bir marta</p>
                         </div>
                     </div>
@@ -242,7 +242,7 @@ function setupKeysSection() {
                             <p id="detail-case-name" class="text-lg font-black uppercase font-gaming text-white">Eco Case</p>
                             <button data-action="back" class="text-[10px] uppercase tracking-[0.4em] text-blue-400">ORQAGA</button>
                         </div>
-                        <p id="detail-case-price" class="text-[12px] tracking-[0.3em] text-yellow-400 font-bold">500 Ñ€ÑŸÐ„â„¢</p>
+                        <p id="detail-case-price" class="text-[12px] tracking-[0.3em] text-yellow-400 font-bold">500 Coin</p>
                     </div>
                 </div>
 
@@ -267,7 +267,7 @@ function setupKeysSection() {
 
                 <button id="openBtn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl font-gaming font-bold text-base tracking-[1px] shadow-xl shadow-blue-900/30 active:scale-95 transition-all flex items-center justify-center space-x-2">
                     <span>KEYSNI OCHISH</span>
-                    <span class="text-yellow-400 text-xs" id="open-case-price">(500 Ñ€ÑŸÐ„â„¢)</span>
+                    <span class="text-yellow-400 text-xs" id="open-case-price">(500 Coin)</span>
                 </button>
             </div>
         </div>
@@ -300,9 +300,9 @@ function showCaseDetail(caseId) {
     const imageEl = detail.querySelector('#detail-case-image');
     if (imageEl) imageEl.src = caseData.image || '';
     const priceEl = detail.querySelector('#detail-case-price');
-    if (priceEl) priceEl.innerText = `${caseData.price} Ñ€ÑŸÐ„â„¢`;
+    if (priceEl) priceEl.innerText = `${caseData.price} Coin`;
     const openCasePrice = detail.querySelector('#open-case-price');
-    if (openCasePrice) openCasePrice.innerText = `(${caseData.price} Ñ€ÑŸÐ„â„¢)`;
+    if (openCasePrice) openCasePrice.innerText = `(${caseData.price} Coin)`;
     renderDetailItems(caseData);
 }
 
@@ -325,7 +325,7 @@ function renderDetailItems(caseData) {
         <div class="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center">
             <img src="${item.image}" class="w-14 h-14 object-contain mb-2">
             <p class="text-[7px] text-white/50 font-bold uppercase text-center">${item.name}</p>
-            <p class="text-[10px] text-yellow-400 font-black mt-1">${item.price} Ñ€ÑŸÐ„â„¢</p>
+            <p class="text-[10px] text-yellow-400 font-black mt-1">${item.price} Coin</p>
         </div>
     `).join('');
 }
