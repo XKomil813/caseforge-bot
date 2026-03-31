@@ -8,6 +8,14 @@ let currentCaseId = DEFAULT_CASE_ID;
 const DEFAULT_STATUS = "OCHISHGA TAYYOR";
 const CURRENCY_LABEL = "coin";
 const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} ${CURRENCY_LABEL}`;
+const sanitizeSkin = (raw) => {
+    if (raw && raw.image) return raw;
+    return {
+        name: raw?.name || 'No-name skin',
+        price: raw?.price || 0,
+        image: raw?.image || 'https://via.placeholder.com/96?text=Skin'
+    };
+};
 
 let userBalance = 0;
 let isOpening = false;
@@ -91,23 +99,14 @@ async function openCase() {
         userBalance = Math.max(Number(payload.newBalance ?? userBalance - price), 0);
         updateBalanceDisplay();
 
-        const fallbackSkin = {
-            name: 'No-name skin',
-            price: caseData.price || 0,
-            image: 'https://via.placeholder.com/96?text=Skin'
-        };
-
-        const safeWon = payload.wonSkin && payload.wonSkin.image ? payload.wonSkin : fallbackSkin;
-        if (safeWon) {
-            userInventory.unshift(safeWon);
-            renderInventory();
-            const pool = Array.isArray(caseData.items) && caseData.items.length
-                ? caseData.items
-                : [safeWon];
-            startRoulette(safeWon, pool, openBtn, statusDisplay);
-        } else {
-            throw new Error("Yutuq uchun ma'lumot yo'q");
-        }
+        const safeWon = sanitizeSkin(payload.wonSkin);
+        userInventory.unshift(safeWon);
+        renderInventory();
+        const pool = (Array.isArray(caseData.items) ? caseData.items : [])
+            .filter(Boolean)
+            .map(sanitizeSkin);
+        if (!pool.length) pool.push(safeWon);
+        startRoulette(safeWon, pool, openBtn, statusDisplay);
 
         incrementGlobalCounter();
     } catch (error) {
