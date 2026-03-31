@@ -23,6 +23,8 @@ async function loadUserData() {
 
         userBalance = Number(data.coins) || 0;
         updateBalanceDisplay();
+        userInventory.splice(0, userInventory.length, ...(data.inventory || []));
+        renderInventory();
 
         const opened = document.getElementById('stats-opened');
         if (opened) opened.innerText = data.totalOpened ?? 0;
@@ -310,9 +312,9 @@ function showCaseDetail(caseId) {
     const imageEl = detail.querySelector('#detail-case-image');
     if (imageEl) imageEl.src = caseData.image || '';
     const priceEl = detail.querySelector('#detail-case-price');
-    if (priceEl) priceEl.innerText = `${caseData.price} coin`;
+    if (priceEl) priceEl.innerText = formatCoins(caseData.price);
     const openCasePrice = detail.querySelector('#open-case-price');
-    if (openCasePrice) openCasePrice.innerText = `(${caseData.price} coin)`;
+    if (openCasePrice) openCasePrice.innerText = `(${formatCoins(caseData.price)})`;
     renderDetailItems(caseData);
     tg?.expand();
 }
@@ -368,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserData();
     updateGlobalCounter();
     setupKeysSection();
+    renderInventory();
 
     const openBtn = document.getElementById('openBtn');
     if (openBtn) {

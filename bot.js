@@ -46,7 +46,8 @@ app.get('/api/user/:id', async (req, res) => {
             coins: user.coins, 
             totalOpened: user.totalOpened,
             username: user.username,
-            id: user.telegramId
+            id: user.telegramId,
+            inventory: user.inventory || []
         });
     } else {
         res.json({ success: false, message: "Foydalanuvchi topilmadi. Botni /start qiling!" });
