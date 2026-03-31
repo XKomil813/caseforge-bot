@@ -139,25 +139,30 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
     const itemsContainer = document.getElementById('roulette-items');
     const parentContainer = document.getElementById('roulette-container');
 
-    if (!itemsContainer || !parentContainer || !itemsPool?.length || !wonSkin) {
+    // 1. Asosiy elementlar borligini va wonSkin kelganini tekshiramiz
+    if (!itemsContainer || !parentContainer || !wonSkin) {
+        console.error("Roulette xatosi: Elementlar yoki wonSkin topilmadi", { wonSkin });
         setButtonState(openBtn, false);
         isOpening = false;
         return;
     }
 
     try {
-        const normalize = (raw) => {
-            if (raw && raw.image) return raw;
+        // 2. Skin ma'lumotlarini tekshirish uchun yordamchi funksiya
+        const getSafeItem = (item) => {
             return {
-                image: raw?.image || 'https://via.placeholder.com/64?text=?',
-                name: raw?.name || '???',
-                price: raw?.price || 0
+                name: item?.name || "Noma'lum skin",
+                price: item?.price || 0,
+                image: item?.image || "https://via.placeholder.com/64?text=No+Image"
             };
         };
 
-        const pool = (itemsPool || []).filter(Boolean).map(normalize);
-        if (!pool.length) pool.push(normalize(wonSkin));
-        const safeWin = normalize(wonSkin);
+        const safeWin = getSafeItem(wonSkin);
+        
+        // 3. Pool (ruletkadagi boshqa skinlar) bo'sh bo'lsa, yutilgan skinni o'zini ishlatsin
+        const pool = (itemsPool && itemsPool.length > 0) 
+            ? itemsPool.filter(Boolean) 
+            : [wonSkin];
 
         itemsContainer.innerHTML = '';
         itemsContainer.style.transition = 'none';
@@ -168,7 +173,10 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
         const itemWidth = 112;
 
         for (let i = 0; i < totalItems; i++) {
-            const item = i === winningIndex ? safeWin : pool[Math.floor(Math.random() * pool.length)];
+            // Tasodifiy yoki yutilgan skinni tanlash
+            const rawItem = i === winningIndex ? wonSkin : pool[Math.floor(Math.random() * pool.length)];
+            const item = getSafeItem(rawItem); // Ma'lumotni xavfsiz holatga keltiramiz
+
             const div = document.createElement('div');
             div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
 
@@ -176,13 +184,14 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             div.style.borderColor = color;
 
             div.innerHTML = `
-                <img src="${item.image}" class="w-14 h-14 object-contain mb-1">
+                <img src="${item.image}" class="w-14 h-14 object-contain mb-1" onerror="this.src='https://via.placeholder.com/64?text=Error'">
                 <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center">${item.name}</p>
                 <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(item.price)}</p>
             `;
             itemsContainer.appendChild(div);
         }
 
+        // Animatsiyani boshlash
         setTimeout(() => {
             const parentWidth = parentContainer.offsetWidth;
             const targetOffset = (winningIndex * itemWidth) - (parentWidth / 2) + (itemWidth / 2);
@@ -190,6 +199,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             itemsContainer.style.left = `-${targetOffset}px`;
         }, 50);
 
+        // Tugatish
         setTimeout(() => {
             if (statusDisplay) {
                 statusDisplay.innerHTML = `
@@ -200,16 +210,12 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
                 `;
                 resetStatusAfterDelay(statusDisplay, 4000);
             }
-
             setButtonState(openBtn, false);
             isOpening = false;
         }, 5500);
+
     } catch (err) {
-        console.error('roulette', err);
-        if (statusDisplay) {
-            statusDisplay.innerHTML = `<span class="text-red-500 font-black text-[10px]">Xatolik: ${err.message}</span>`;
-            resetStatusAfterDelay(statusDisplay, 4000);
-        }
+        console.error('Roulette render xatosi:', err);
         setButtonState(openBtn, false);
         isOpening = false;
     }
