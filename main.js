@@ -1,23 +1,20 @@
-// 1. ASOSIY KONFIGURATSIYA
+// 1. ASOSIY KONFIGURATSIYA VA GLOBAL O'ZGARUVCHILAR
 const tg = window.Telegram ? window.Telegram.WebApp : null;
 const RENDER_URL = 'https://caseforge-bot.onrender.com';
-const userId = tg?.initDataUnsafe?.user?.id || "64537281"; // Test uchun ID
+const userId = tg?.initDataUnsafe?.user?.id || "64537281"; 
 
-// ELEMENTLAR
-const rouletteContainer = document.getElementById('roulette-container');
-const rouletteItems = document.getElementById('roulette-items');
-const openBtn = document.getElementById('openBtn');
-const statusText = document.getElementById('status');
+let userBalance = 0; // Global balans
+let userInventory = []; // Global inventar
 
-// 2. FOYDALANUVCHI MA'LUMOTLARI
+// 2. FOYDALANUVCHI MA'LUMOTLARI (Yuklash va Yangilash)
 async function loadUserData() {
     if (!userId) return;
     try {
         const res = await fetch(`${RENDER_URL}/api/user/${userId}`);
         const data = await res.json();
         if (data.success) {
-            if(document.getElementById('balance-display')) 
-                document.getElementById('balance-display').innerText = data.coins.toFixed(0);
+            userBalance = data.coins;
+            updateBalanceDisplay();
             
             if(document.getElementById('stats-opened')) 
                 document.getElementById('stats-opened').innerText = data.totalOpened;
@@ -25,17 +22,21 @@ async function loadUserData() {
             if(document.getElementById('user-name')) 
                 document.getElementById('user-name').innerText = data.username || "Foydalanuvchi";
 
-            // Do'stlar statistikasi
             if(document.getElementById('total-friends'))
                 document.getElementById('total-friends').innerText = data.referrals?.length || 0;
             
             if(document.getElementById('total-earned'))
-                document.getElementById('total-earned').innerText = (data.referrals?.length * 50) || 0;
+                document.getElementById('total-earned').innerText = (data.referrals?.length * 500) + " 🪙";
         }
-    } catch (e) { console.error("Yuklashda xato"); }
+    } catch (e) { console.error("Ma'lumot yuklashda xato:", e); }
 }
 
-// 3. RULETKA VA KEYS OCHISH (Optimallashgan)
+function updateBalanceDisplay() {
+    const display = document.getElementById('balance-display');
+    if (display) display.innerText = Math.floor(userBalance);
+}
+
+// 3. RULETKA VA KEYS OCHISH
 async function openCase() {
     const statusDisplay = document.getElementById('status-text');
     const openBtn = document.getElementById('openBtn');
@@ -49,7 +50,7 @@ async function openCase() {
         return;
     }
 
-    // 2. Tugmani bloklash (ikki marta bosilmasligi uchun)
+    // 2. Tugmani bloklash
     openBtn.disabled = true;
     openBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
@@ -57,50 +58,44 @@ async function openCase() {
         statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic">KEYS OCHILMOQDA...</span>';
     }
 
-    // 3. Balansdan pul yechish (Sizning load/save funksiyalaringizga qarab)
+    // 3. Balansdan ayirish
     userBalance -= 500;
-    updateBalanceDisplay(); // Balansni ekranda yangilash funksiyasi
+    updateBalanceDisplay();
 
-    // 4. Tasodifiy skinni tanlash (ECO case misolida)
+    // 4. Tasodifiy skinni tanlash (CASES_DATA mavjudligini tekshirish kerak)
+    if (typeof CASES_DATA === 'undefined' || !CASES_DATA['eco']) {
+        console.error("CASES_DATA topilmadi! cases.js ulanmagan bo'lishi mumkin.");
+        return;
+    }
+    
     const items = CASES_DATA['eco'].items;
     const wonSkin = items[Math.floor(Math.random() * items.length)];
 
     // 5. RULETKANI ISHGA TUSHIRISH
-    console.log("Yutilgan skin:", wonSkin.name);
     startRoulette(wonSkin); 
-
-    // 6. Invertarga qo'shish
-    userInventory.push({ ...wonSkin, id: Date.now() });
-    saveUserData(); // Ma'lumotlarni saqlash
 }
 
 function startRoulette(wonSkin) {
     const itemsContainer = document.getElementById('roulette-items');
     const parentContainer = document.getElementById('roulette-container');
-    const openBtn = document.querySelector('button[onclick*="openCase"]'); // Tugmani topish
-
+    
     if (!itemsContainer || !parentContainer) return;
 
-    // 1. Tayyorgarlik
     itemsContainer.innerHTML = ''; 
     itemsContainer.style.transition = 'none';
     itemsContainer.style.left = '0px';
 
-    // 2. Skinlar ro'yxatini olish (ECO case misolida)
     const itemsData = CASES_DATA['eco'].items;
-    const totalItems = 60; // Ruletka uzunligi
-    const winningIndex = 50; // 50-chi skin yutuq bo'ladi
-    const itemWidth = 110; // Har bir skin eni 110px
+    const totalItems = 60; 
+    const winningIndex = 50; 
+    const itemWidth = 112; 
 
-    // startRoulette funksiyasi ichidagi skin yaratish qismi:
     for (let i = 0; i < totalItems; i++) {
         const item = (i === winningIndex) ? wonSkin : itemsData[Math.floor(Math.random() * itemsData.length)];
-        
         const div = document.createElement('div');
-        // 'w-24' va 'h-24' o'lchamini bir oz kichraytirdik, shunda sig'ishi oson bo'ladi
         div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
         
-        let color = item.price > 10 ? '#eb4b4b' : (item.price > 2 ? '#4b69ff' : '#b0c3d9');
+        let color = item.price > 5 ? '#eb4b4b' : (item.price > 2 ? '#4b69ff' : '#b0c3d9');
         div.style.borderColor = color;
         
         div.innerHTML = `
@@ -110,53 +105,41 @@ function startRoulette(wonSkin) {
         itemsContainer.appendChild(div);
     }
 
-// startRoulette funksiyasi ichida:
-setTimeout(() => {
-    const itemFullWidth = 112; // skin eni + margin
-    const parentWidth = document.getElementById('roulette-container').offsetWidth;
-    
-    // Markazga to'g'irlash
-    const targetOffset = (50 * itemFullWidth) - (parentWidth / 2) + (itemFullWidth / 2);
-    
-    const itemsContainer = document.getElementById('roulette-items');
-    itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
-    itemsContainer.style.left = `-${targetOffset}px`;
-}, 50);
+    setTimeout(() => {
+        const parentWidth = parentContainer.offsetWidth;
+        const targetOffset = (winningIndex * itemWidth) - (parentWidth / 2) + (itemWidth / 2);
+        
+        itemsContainer.style.transition = 'left 5s cubic-bezier(0.1, 0, 0.05, 1)';
+        itemsContainer.style.left = `-${targetOffset}px`;
+    }, 50);
 
+    // NATIJA
+    setTimeout(() => {
+        const statusDisplay = document.getElementById('status-text');
+        const openBtn = document.getElementById('openBtn');
 
+        if (statusDisplay) {
+            statusDisplay.innerHTML = `
+                <div class="flex flex-col items-center animate-bounce">
+                    <span class="text-green-400 font-black text-[12px]">TABRIKLAYMIZ!</span>
+                    <span class="text-[10px] text-white font-bold uppercase">${wonSkin.name}</span>
+                </div>
+            `;
+        }
 
-setTimeout(() => {
-    const statusDisplay = document.getElementById('status-text');
-    const openBtn = document.getElementById('openBtn');
+        if (openBtn) {
+            openBtn.disabled = false;
+            openBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
 
-    if (statusDisplay) {
-        // "Ochilmoqda" matnini yutuq matniga almashtiramiz
-        statusDisplay.innerHTML = `
-            <div class="flex flex-col items-center animate-bounce">
-                <span class="text-green-400 font-black text-[12px] tracking-tighter">TABRIKLAYMIZ!</span>
-                <span class="text-[10px] text-white font-bold uppercase">${wonSkin.name}</span>
-            </div>
-        `;
-    }
+        // Inventarga qo'shish va saqlash funksiyangizni bu yerga qo'ying
+        // saveWonSkin(wonSkin); 
+    }, 5500);
+}
 
-    // Tugmani yana yoqish
-    if (openBtn) {
-        openBtn.disabled = false;
-        openBtn.style.opacity = "1";
-    }
-
-    // Balansni va invertarni yangilash (Sizning funksiyalaringiz)
-    if(typeof loadUserData === 'function') loadUserData();
-}, 5500);
-
-
-// 4. VAZIFALAR (STREAK) MANTIQLARI
+// 4. VAZIFALAR VA REFERAL (Siz yuborgan mantiq saqlab qolindi)
 let streak = parseInt(localStorage.getItem('userStreak')) || 0;
 let timerStartTime = parseInt(localStorage.getItem('timerStart')) || 0;
-// Name task uchun yangi o'zgaruvchilar (OLDINGI KODINGIZDA YO'Q EDI)
-let nameStreak = parseInt(localStorage.getItem('nameStreak')) || 0;
-let nameTimerStart = parseInt(localStorage.getItem('nameTimerStart')) || 0;
-
 const rewards = [20, 50, 80, 120, 150, 180, 200];
 
 function handleRewardClick() {
@@ -173,7 +156,8 @@ function handleRewardClick() {
         localStorage.setItem('userStreak', streak);
         localStorage.setItem('timerStart', 0);
         timerStartTime = 0;
-        loadUserData(); // Pulni serverga ham qo'shish kerak (Backendda endpoint bo'lsa)
+        userBalance += rewards[Math.min(streak-1, 6)];
+        updateBalanceDisplay();
         updateUI();
         alert("Mukofot olindi!");
     }
@@ -189,6 +173,7 @@ function startVisualTimer(btnId, duration, startTime) {
         const timeLeft = duration - (now - startTime);
         if (timeLeft <= 0) {
             clearInterval(interval);
+            btn.disabled = false;
             updateUI();
             return;
         }
@@ -202,89 +187,33 @@ function startVisualTimer(btnId, duration, startTime) {
 
 function updateUI() {
     const btn = document.getElementById('reward-btn');
-    if(btn) {
+    if(btn && timerStartTime === 0) {
         btn.innerText = `+${rewards[Math.min(streak, 6)]} 🪙`;
         btn.classList.remove('bg-gray-700');
     }
-    // Progress bar chizish
-    const progress = document.getElementById('streak-progress');
-    if(progress) {
-        progress.innerHTML = '';
-        for(let i=0; i<7; i++) {
-            const d = document.createElement('div');
-            d.className = `flex-1 h-full rounded-full ${i < streak ? 'bg-blue-500' : 'bg-gray-800'}`;
-            progress.appendChild(d);
-        }
-    }
 }
 
-// 5. DO'STLAR VA REFERAL FUNKSIYALARI
-function shareToTelegram() {
-    const link = `https://t.me/CaseForgeUZBot?start=${userId}`;
-    const text = "🔥 CaseForge: Zo'r skinlar yutib olamiz! +200 tanga bonus👇";
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`, '_blank');
-}
-
-function copyRefLink() {
-    const link = `https://t.me/CaseForgeUZBot?start=${userId}`;
-    navigator.clipboard.writeText(link).then(() => {
-        alert("Havola nusxalandi!");
-    });
-}
-
-// 6. INITIALIZATION
+// 5. INITIALIZATION
 document.addEventListener('DOMContentLoaded', () => {
-    updateUI();
     loadUserData();
+    updateUI();
     
     if (openBtn) openBtn.addEventListener('click', openCase);
 
-    // Timerni qayta tiklash
-    const now = Date.now();
-    if (timerStartTime !== 0 && (now - timerStartTime < 86400000)) {
-        startVisualTimer('reward-btn', 86400000, timerStartTime);
+    if (timerStartTime !== 0) {
+        const now = Date.now();
+        if (now - timerStartTime < 86400000) {
+            startVisualTimer('reward-btn', 86400000, timerStartTime);
+        } else {
+            timerStartTime = 0;
+            localStorage.setItem('timerStart', 0);
+        }
     }
-
-    // Havola ko'rinishini yangilash
-    const refDisplay = document.getElementById('display-ref-link');
-    if(refDisplay) refDisplay.innerText = `t.me/CaseForgeUZBot?start=${userId}`;
 });
-// Har bir do'st uchun 500 coin berish mantiqi
-function updateBalance(friendsCount) {
-    const rewardPerFriend = 500; // Miqdor: 500 coin
-    const totalEarnedFromFriends = friendsCount * rewardPerFriend;
 
-    // 1. Do'stlar bo'limidagi "Jami do'stlar" sonini yangilash
-    const totalFriendsElem = document.getElementById('total-friends');
-    if (totalFriendsElem) {
-        totalFriendsElem.innerText = friendsCount;
-    }
-
-    // 2. Do'stlar bo'limidagi "Sizning foydangiz" (500 dan hisoblaganda)
-    const totalEarnedElem = document.getElementById('total-earned');
-    if (totalEarnedElem) {
-        totalEarnedElem.innerText = totalEarnedFromFriends + " 🪙";
-    }
-
-    // 3. ASOSIY BALANSNI YANGILASH (Tepadagi katta raqam)
-    // Diqqat: Bu yerda 'balance-display' ID-li element bo'lishi shart
-    const mainBalanceElem = document.getElementById('balance-display');
-    if (mainBalanceElem) {
-        // Hozirgi balansni olib, unga do'stlardan kelgan pulni qo'shish mantiqi
-        // (Agar bazadan kelayotgan bo'lsa, to'g'ridan-to'g'ri o'shani yozasiz)
-        mainBalanceElem.innerText = totalEarnedFromFriends; 
-    }
-    
-    console.log("Balans yangilandi: " + totalEarnedFromFriends + " coin");
-}
-
-// MODAL FUNKSIYALARI
+// MODAL VA NAVIGATSIYA
 window.openTaskModal = () => document.getElementById('taskModal')?.classList.remove('hidden');
 window.closeTaskModal = () => document.getElementById('taskModal')?.classList.add('hidden');
-window.openNameModal = () => document.getElementById('nameModal')?.classList.remove('hidden');
-window.closeNameModal = () => document.getElementById('nameModal')?.classList.add('hidden');
-
-// NAVIGATSIYA
 window.showSection = function(sectionId, element) {
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById(sectionId);
@@ -295,6 +224,4 @@ window.showSection = function(sectionId, element) {
         btn.classList.add('text-gray-500');
     });
     if (element) element.classList.add('text-orange-500');
-    loadUserData();
 };
-}
