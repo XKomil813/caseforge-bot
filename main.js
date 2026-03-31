@@ -91,6 +91,7 @@ async function openCase() {
 
         if (payload.wonSkin) {
             userInventory.unshift(payload.wonSkin);
+            renderInventory();
             startRoulette(payload.wonSkin, caseData.items, openBtn, statusDisplay);
         } else {
             throw new Error("Yutuq uchun ma'lumot yo'q");
@@ -151,7 +152,8 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
 
         div.innerHTML = `
             <img src="${item.image}" class="w-14 h-14 object-contain mb-1">
-            <p class="text-[6px] text-white/40 font-bold uppercase tracking-widest w-full text-center">${item.name}</p>
+            <p class="text-[6px] text-white/60 font-bold uppercase tracking-widest w-full text-center">${item.name}</p>
+            <p class="text-[7px] text-yellow-400 font-black mt-0.5">${formatCoins(item.price)}</p>
         `;
         itemsContainer.appendChild(div);
     }
@@ -334,7 +336,30 @@ function renderDetailItems(caseData) {
         <div class="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center">
             <img src="${item.image}" class="w-14 h-14 object-contain mb-2">
             <p class="text-[7px] text-white/50 font-bold uppercase text-center">${item.name}</p>
-            <p class="text-[10px] text-yellow-400 font-black mt-1">${item.price} coin</p>
+            <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(item.price)}</p>
+        </div>
+    `).join('');
+}
+
+function renderInventory() {
+    const inventoryList = document.getElementById('inventory-list');
+    if (!inventoryList) return;
+
+    if (!userInventory.length) {
+        inventoryList.innerHTML = `
+            <div class="col-span-2 flex flex-col items-center justify-center py-20 opacity-20">
+                <span class="material-icons-outlined text-5xl">inventory_2</span>
+                <p class="font-gaming text-[9px] mt-2 uppercase tracking-widest">Hozircha bo'sh</p>
+            </div>
+        `;
+        return;
+    }
+
+    inventoryList.innerHTML = userInventory.map(item => `
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center text-center">
+            <img src="${item.image}" class="w-16 h-16 object-contain mb-2">
+            <p class="text-[8px] text-white/70 font-bold uppercase truncate w-full">${item.name}</p>
+            <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(item.price)}</p>
         </div>
     `).join('');
 }
