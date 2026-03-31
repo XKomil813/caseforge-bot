@@ -209,4 +209,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (openBtn) {
         openBtn.addEventListener('click', openCase);
     }
+
+    if (tg?.ready) {
+        tg.ready(() => {
+            tg.expand();
+            if (tg.MainButton) {
+                tg.MainButton.hide();
+            }
+        });
+    } else {
+        tg?.expand();
+    }
 });
