@@ -145,6 +145,37 @@
                 </div>
             </div>
 
+            <!-- Item Detail Modal -->
+            <div id="item-detail-modal" class="fixed inset-0 z-[9999] hidden">
+                <div class="absolute inset-0 bg-black flex flex-col">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-4 py-3 z-10">
+                        <button id="item-modal-back" class="text-white/80 hover:text-white">
+                            <span class="material-icons-outlined text-2xl">arrow_back</span>
+                        </button>
+                        <button id="item-modal-close" class="text-white/80 hover:text-white">
+                            <span class="material-icons-outlined text-2xl">close</span>
+                        </button>
+                    </div>
+                    <!-- Image -->
+                    <div class="flex-1 flex items-center justify-center px-8">
+                        <img id="item-modal-image" src="" class="max-w-full max-h-[60vh] object-contain drop-shadow-[0_0_60px_rgba(59,130,246,0.3)]">
+                    </div>
+                    <!-- Info -->
+                    <div class="px-6 pb-10 space-y-2">
+                        <p id="item-modal-weapon" class="text-sm text-white/50 uppercase tracking-widest"></p>
+                        <h2 id="item-modal-name" class="text-2xl font-black text-white"></h2>
+                        <div class="flex items-center gap-2">
+                            <span id="item-modal-grade" class="text-[10px] font-bold uppercase px-3 py-1 rounded-full"></span>
+                        </div>
+                        <div class="flex items-center justify-end mt-2">
+                            <span id="item-modal-price" class="text-xl font-black text-yellow-400"></span>
+                            <span class="text-yellow-500 ml-1">🪙</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="friends-section" class="section hidden animate-fade-in">
                 <div class="glass border border-white/10 rounded-[32px] p-6 text-center">
                     <h2 class="text-2xl font-black font-gaming italic uppercase text-white mb-2">Do'stlar</h2>

@@ -346,17 +346,20 @@ function renderInventory() {
         return;
     }
 
-    // Xavfsiz render qilish - har bir item ni tekshirib chiqamiz
-    inventoryList.innerHTML = userInventory.map(item => {
-        // Item ni xavfsiz holatga keltirish
+    inventoryList.innerHTML = userInventory.map((item, index) => {
         const safeItem = {
             name: item?.name || "Noma'lum Skin",
             price: item?.price || 0,
             image: item?.image || "https://via.placeholder.com/96?text=No+Image"
         };
         
+        const borderColor = safeItem.price >= 5000 ? 'border-red-500/30' : 
+                           safeItem.price >= 1000 ? 'border-purple-500/30' : 
+                           safeItem.price >= 300 ? 'border-blue-500/30' : 'border-white/10';
+        
         return `
-            <div class="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center text-center">
+            <div class="bg-white/5 ${borderColor} border rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:bg-white/10 active:scale-95 transition-all" 
+                 onclick="showItemDetail(${index})">
                 <img src="${safeItem.image}" class="w-16 h-16 object-contain mb-2" onerror="this.src='https://via.placeholder.com/96?text=Error'">
                 <p class="text-[8px] text-white/70 font-bold uppercase truncate w-full" title="${safeItem.name}">${safeItem.name.substring(0, 25)}</p>
                 <p class="text-[10px] text-yellow-400 font-black mt-1">${formatCoins(safeItem.price)}</p>
@@ -364,6 +367,75 @@ function renderInventory() {
         `;
     }).join('');
 }
+
+// Item detail modal
+function showItemDetail(index) {
+    const item = userInventory[index];
+    if (!item) return;
+
+    const modal = document.getElementById('item-detail-modal');
+    if (!modal) return;
+
+    const safeItem = {
+        name: item?.name || "Noma'lum Skin",
+        price: item?.price || 0,
+        image: item?.image || "https://via.placeholder.com/300?text=No+Image"
+    };
+
+    // Qurol va skin nomini ajratish (masalan: "AK-47 | Slate" -> weapon: "AK-47", skin: "Slate")
+    let weaponName = '';
+    let skinName = safeItem.name;
+    if (safeItem.name.includes(' | ')) {
+        const parts = safeItem.name.split(' | ');
+        weaponName = parts[0].trim();
+        skinName = parts.slice(1).join(' | ').trim();
+    }
+
+    // Grade aniqlash (narx bo'yicha)
+    let gradeName, gradeColor;
+    if (safeItem.price >= 10000) {
+        gradeName = 'COVERT'; gradeColor = 'bg-red-600 text-white';
+    } else if (safeItem.price >= 5000) {
+        gradeName = 'CLASSIFIED'; gradeColor = 'bg-pink-600 text-white';
+    } else if (safeItem.price >= 1000) {
+        gradeName = 'RESTRICTED'; gradeColor = 'bg-purple-600 text-white';
+    } else if (safeItem.price >= 300) {
+        gradeName = 'MIL-SPEC'; gradeColor = 'bg-blue-600 text-white';
+    } else if (safeItem.price >= 100) {
+        gradeName = 'INDUSTRIAL GRADE'; gradeColor = 'bg-sky-400 text-black';
+    } else {
+        gradeName = 'CONSUMER GRADE'; gradeColor = 'bg-gray-400 text-black';
+    }
+
+    document.getElementById('item-modal-image').src = safeItem.image;
+    document.getElementById('item-modal-weapon').innerText = weaponName;
+    document.getElementById('item-modal-name').innerText = skinName;
+    
+    const gradeEl = document.getElementById('item-modal-grade');
+    gradeEl.innerText = gradeName;
+    gradeEl.className = `text-[10px] font-bold uppercase px-3 py-1 rounded-full ${gradeColor}`;
+    
+    document.getElementById('item-modal-price').innerText = safeItem.price.toLocaleString();
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeItemDetail() {
+    const modal = document.getElementById('item-detail-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+// Modal yopish eventlari
+document.addEventListener('DOMContentLoaded', () => {
+    const backBtn = document.getElementById('item-modal-back');
+    const closeBtn = document.getElementById('item-modal-close');
+    if (backBtn) backBtn.addEventListener('click', closeItemDetail);
+    if (closeBtn) closeBtn.addEventListener('click', closeItemDetail);
+});
 
 // ============ KEYS SECTION SETUP ============
 function setupKeysSection() {
