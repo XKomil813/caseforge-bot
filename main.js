@@ -9,7 +9,7 @@ const DEFAULT_STATUS = "OCHISHGA TAYYOR";
 const CURRENCY_LABEL = "coin";
 
 // Formatlash funksiyalari
-const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} 🪙`;
+const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} <span class="text-[8px] text-gray-600 font-bold uppercase mt-1">coin</span>`;
 
 // Xavfsiz skin yaratish funksiyasi - DUPLICATNI OLDINI OLADI
 const createSafeSkin = (skin) => {
