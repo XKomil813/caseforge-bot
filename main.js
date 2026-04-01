@@ -512,16 +512,20 @@ async function sellAllItems() {
     
     const totalSellPrice = userInventory.reduce((sum, i) => sum + Math.floor((i?.price || 0) * 0.7), 0);
     
+    const doSell = () => {
+        executeSellAll();
+    };
+    
     if (tg && tg.showConfirm) {
         tg.showConfirm(
             `${userInventory.length} ta skinni ${totalSellPrice.toLocaleString()} coinga sotasizmi?`,
-            async (confirmed) => {
-                if (confirmed) await executeSellAll();
+            (confirmed) => {
+                if (confirmed) doSell();
             }
         );
     } else {
         if (confirm(`${userInventory.length} ta skinni ${totalSellPrice.toLocaleString()} coinga sotasizmi?`)) {
-            await executeSellAll();
+            doSell();
         }
     }
 }
