@@ -531,22 +531,32 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing...");
     // FULLSCREEN UCHUN
     if (window.Telegram && window.Telegram.WebApp) {
-        const tg = window.Telegram.WebApp;
-        
-        // Expand qilish
-        tg.expand();
-        
-        // Main buttonni yashirish
-        if (tg.MainButton) tg.MainButton.hide();
-        
-        // Background color
-        tg.setBackgroundColor("#08090d");
-        tg.setHeaderColor("bg_color");
+        const tgApp = window.Telegram.WebApp;
         
         // Ready
-        tg.ready();
+        tgApp.ready();
         
-        console.log("Telegram WebApp expanded");
+        // Expand qilish
+        tgApp.expand();
+        
+        // Fullscreen so'rash (Telegram Bot API 8.0+)
+        if (tgApp.requestFullscreen) {
+            tgApp.requestFullscreen();
+        }
+        
+        // Swipe bilan yopilishni o'chirish
+        if (tgApp.disableVerticalSwipes) {
+            tgApp.disableVerticalSwipes();
+        }
+        
+        // Main buttonni yashirish
+        if (tgApp.MainButton) tgApp.MainButton.hide();
+        
+        // Background color
+        tgApp.setBackgroundColor("#08090d");
+        tgApp.setHeaderColor("#08090d");
+        
+        console.log("Telegram WebApp fullscreen requested");
     }
     console.log("CASES_DATA loaded:", typeof window.CASES_DATA !== 'undefined');
     
