@@ -70,6 +70,7 @@ app.use((req, res, next) => {
 // });
 
 // --- DATABASE ULANISHI ---
+// Eski optionlarni O'CHIRIB tashladik
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("✅ MongoDB ulandi"))
 .catch(err => console.error("❌ MongoDB xatosi:", err));

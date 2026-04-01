@@ -269,7 +269,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             const div = document.createElement('div');
             div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
             
-            const color = safeItem.price > 500 ? '#eb4b4b' : (safeItem.price > 250 ? '#4b69ff' : '#b0c3d9');
+            const color = safeItem.price >= 50000 ? '#ffd700' : safeItem.price >= 10000 ? '#eb4b4b' : safeItem.price >= 3000 ? '#d32ee6' : safeItem.price >= 1000 ? '#4b69ff' : '#b0c3d9';
             div.style.borderColor = color;
 
             div.innerHTML = `
@@ -430,15 +430,15 @@ function showItemDetail(index) {
     }
 
     let gradeName, gradeColor;
-    if (safeItem.price >= 10000) {
+    if (safeItem.price >= 50000) {
         gradeName = 'COVERT'; gradeColor = 'bg-red-600 text-white';
-    } else if (safeItem.price >= 5000) {
+    } else if (safeItem.price >= 15000) {
         gradeName = 'CLASSIFIED'; gradeColor = 'bg-pink-600 text-white';
-    } else if (safeItem.price >= 1000) {
+    } else if (safeItem.price >= 5000) {
         gradeName = 'RESTRICTED'; gradeColor = 'bg-purple-600 text-white';
-    } else if (safeItem.price >= 300) {
+    } else if (safeItem.price >= 1500) {
         gradeName = 'MIL-SPEC'; gradeColor = 'bg-blue-600 text-white';
-    } else if (safeItem.price >= 100) {
+    } else if (safeItem.price >= 500) {
         gradeName = 'INDUSTRIAL GRADE'; gradeColor = 'bg-sky-400 text-black';
     } else {
         gradeName = 'CONSUMER GRADE'; gradeColor = 'bg-gray-400 text-black';
@@ -620,7 +620,7 @@ function setupKeysSection() {
     const markup = `
         <div class="glass border border-white/10 p-6 rounded-[32px] text-center shadow-2xl space-y-6">
             <div id="keys-list" class="space-y-4">
-                ${['eco', 'budget'].map(id => {
+                ${Object.keys(window.CASES_DATA).map(id => {
                     const c = window.CASES_DATA[id];
                     if (!c) return '';
                     return `
@@ -629,7 +629,7 @@ function setupKeysSection() {
                                 <div class="text-left">
                                     <p class="text-[10px] font-gaming uppercase tracking-[0.4em] text-blue-400">Keyslar</p>
                                     <h3 class="text-2xl font-black uppercase font-gaming tracking-tighter text-white mt-1">${c.name}</h3>
-                                    <p class="text-[9px] text-gray-500 mt-1">${id === 'eco' ? 'Eng yengil case | 20+ skin' : 'Premium case | Qimmatbaho skinlar'}</p>
+                                    <p class="text-[9px] text-gray-500 mt-1">${c.description || c.name}</p>
                                 </div>
                                 <div class="flex items-center gap-1 justify-end text-right">
                                     <span class="material-icons-outlined text-yellow-400 text-base align-middle">monetization_on</span>
