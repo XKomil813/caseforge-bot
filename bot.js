@@ -41,7 +41,7 @@ app.use(express.urlencoded({ extended: true }));
 // CORS sozlamalari - PREFLIGHT (OPTIONS) uchun to'liq
 app.use((req, res, next) => {
     // Ruxsat berilgan originlar
-    const allowedOrigins = ['https://caseforge-bot.onrender.com', 'https://your-app.onrender.com', 'http://localhost:3000'];
+    const allowedOrigins = ['https://caseforge-bot.onrender.com', 'https://xkomil813.github.io', 'http://localhost:3000'];
     const origin = req.headers.origin;
     
     if (allowedOrigins.includes(origin) || !origin) {
@@ -114,15 +114,6 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // --- API LAR (WEB APP UCHUN) ---
-
-app.get('/', (req, res) => {
-    res.json({ 
-        status: 'running', 
-        message: 'CaseForge Server is running!',
-        version: '1.0.0',
-        timestamp: new Date().toISOString()
-    });
-});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
