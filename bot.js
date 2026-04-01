@@ -35,11 +35,41 @@ console.log('🔐 Admin sozlamalari tugallandi! Adminlar soni:', ADMIN_IDS.lengt
 // --- SERVER SOZLAMALARI ---
 const app = express();
 app.use(express.json());
-app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
-// --- DATABASE ULANISHI (TUZATILGAN) ---
-// Eski optionlarni olib tashladik, chunki ular qo'llab-quvvatlanmaydi
+// CORS sozlamalari - PREFLIGHT (OPTIONS) uchun to'liq
+app.use((req, res, next) => {
+    // Ruxsat berilgan originlar
+    const allowedOrigins = ['https://caseforge-bot.onrender.com', 'https://your-app.onrender.com', 'http://localhost:3000'];
+    const origin = req.headers.origin;
+    
+    if (allowedOrigins.includes(origin) || !origin) {
+        res.header('Access-Control-Allow-Origin', origin || '*');
+    }
+    
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // OPTIONS so'rovlariga darhol 200 qaytar
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+// Yoki oddiy versiya (hamma narsaga ruxsat):
+// app.use((req, res, next) => {
+//     res.header('Access-Control-Allow-Origin', '*');
+//     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//     res.header('Access-Control-Allow-Headers', 'Content-Type');
+//     if (req.method === 'OPTIONS') {
+//         return res.sendStatus(200);
+//     }
+//     next();
+// });
+
+// --- DATABASE ULANISHI ---
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("✅ MongoDB ulandi"))
 .catch(err => console.error("❌ MongoDB xatosi:", err));
