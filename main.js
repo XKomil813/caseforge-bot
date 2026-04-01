@@ -269,7 +269,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             const div = document.createElement('div');
             div.className = "flex-shrink-0 w-24 h-24 mx-2 bg-gradient-to-b from-white/10 to-transparent rounded-xl border-b-4 flex flex-col items-center justify-center p-2 relative";
             
-            const color = safeItem.price >= 50000 ? '#ffd700' : safeItem.price >= 10000 ? '#eb4b4b' : safeItem.price >= 3000 ? '#d32ee6' : safeItem.price >= 1000 ? '#4b69ff' : '#b0c3d9';
+            const color = safeItem.price >= 15000 ? '#ffd700' : safeItem.price >= 4000 ? '#eb4b4b' : safeItem.price >= 1000 ? '#d32ee6' : safeItem.price >= 400 ? '#4b69ff' : '#b0c3d9';
             div.style.borderColor = color;
 
             div.innerHTML = `
@@ -391,9 +391,9 @@ function renderInventory() {
             image: item?.image || "https://via.placeholder.com/96?text=No+Image"
         };
         
-        const borderColor = safeItem.price >= 5000 ? 'border-red-500/30' : 
-                           safeItem.price >= 1000 ? 'border-purple-500/30' : 
-                           safeItem.price >= 300 ? 'border-blue-500/30' : 'border-white/10';
+        const borderColor = safeItem.price >= 2000 ? 'border-red-500/30' : 
+                           safeItem.price >= 500 ? 'border-purple-500/30' : 
+                           safeItem.price >= 150 ? 'border-blue-500/30' : 'border-white/10';
         
         return `
             <div class="bg-white/5 ${borderColor} border rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:bg-white/10 active:scale-95 transition-all" 
@@ -430,15 +430,15 @@ function showItemDetail(index) {
     }
 
     let gradeName, gradeColor;
-    if (safeItem.price >= 50000) {
+    if (safeItem.price >= 15000) {
         gradeName = 'COVERT'; gradeColor = 'bg-red-600 text-white';
-    } else if (safeItem.price >= 15000) {
-        gradeName = 'CLASSIFIED'; gradeColor = 'bg-pink-600 text-white';
     } else if (safeItem.price >= 5000) {
+        gradeName = 'CLASSIFIED'; gradeColor = 'bg-pink-600 text-white';
+    } else if (safeItem.price >= 2000) {
         gradeName = 'RESTRICTED'; gradeColor = 'bg-purple-600 text-white';
-    } else if (safeItem.price >= 1500) {
-        gradeName = 'MIL-SPEC'; gradeColor = 'bg-blue-600 text-white';
     } else if (safeItem.price >= 500) {
+        gradeName = 'MIL-SPEC'; gradeColor = 'bg-blue-600 text-white';
+    } else if (safeItem.price >= 150) {
         gradeName = 'INDUSTRIAL GRADE'; gradeColor = 'bg-sky-400 text-black';
     } else {
         gradeName = 'CONSUMER GRADE'; gradeColor = 'bg-gray-400 text-black';
