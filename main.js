@@ -164,7 +164,7 @@ async function openCase() {
     if (winBtns) winBtns.classList.add('hidden');
     
     if (statusDisplay) {
-        statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic">🎲 KEYS OCHILMOQDA...</span>';
+        statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic"><span class="material-icons-outlined align-middle" style="font-size:1em">casino</span> KEYS OCHILMOQDA...</span>';
     }
 
     try {
@@ -304,7 +304,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             // Win sell price ni yangilash
             const winSellBtn = document.getElementById('win-sell-btn');
             if (winSellBtn) {
-                winSellBtn.innerHTML = `💰 SOTISH (${safeWon.price.toLocaleString()} ${COIN_ICON})`;
+                winSellBtn.innerHTML = `<span class="material-icons-outlined text-yellow-500 align-middle" style="font-size:1em">sell</span> SOTISH (${safeWon.price.toLocaleString()} ${COIN_ICON})`;
             }
             
             // Win buttons ko'rsatish
@@ -583,7 +583,7 @@ async function sellWonSkin() {
             
             const statusDisplay = document.getElementById('status-text');
             if (statusDisplay) {
-                statusDisplay.innerHTML = `<span class="text-green-400 font-black text-[11px]">✅ Sotildi! +${data.sellPrice} coin</span>`;
+                statusDisplay.innerHTML = `<span class="text-green-400 font-black text-[11px]"><span class="material-icons-outlined align-middle" style="font-size:1em">check_circle</span> Sotildi! +${data.sellPrice} coin</span>`;
                 setTimeout(() => {
                     if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
                 }, 2500);
@@ -697,10 +697,10 @@ function setupKeysSection() {
                         <!-- Win buttons (Sotish + Qayta ochish) -->
                         <div id="win-buttons" class="hidden space-y-3">
                             <button id="win-sell-btn" onclick="sellWonSkin()" class="w-full py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl font-gaming font-bold text-sm tracking-wider shadow-xl shadow-red-900/30 active:scale-95 transition-all text-white">
-                                💰 SOTISH
+                                <span class="material-icons-outlined text-yellow-500 align-middle" style="font-size:1em">sell</span> SOTISH
                             </button>
                             <button id="win-reopen-btn" onclick="reopenCase()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl font-gaming font-bold text-sm tracking-wider shadow-xl shadow-blue-900/30 active:scale-95 transition-all text-white">
-                                🔄 QAYTA OCHISH
+                                <span class="material-icons-outlined align-middle" style="font-size:1em">refresh</span> QAYTA OCHISH
                             </button>
                         </div>
                     </div>
