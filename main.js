@@ -6,10 +6,10 @@ const userId = tg?.initDataUnsafe?.user?.id || "64537281";
 const DEFAULT_CASE_ID = 'eco';
 let currentCaseId = DEFAULT_CASE_ID;
 const DEFAULT_STATUS = "OCHISHGA TAYYOR";
-const CURRENCY_LABEL = "coin";
+const COIN_ICON = '<span class="material-icons-outlined text-yellow-500 align-middle" style="font-size:1em">monetization_on</span>';
 
 // Formatlash funksiyalari
-const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} <span class="text-[8px] text-gray-600 font-bold uppercase mt-1">coin</span>`;
+const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} ${COIN_ICON}`;
 
 // Xavfsiz skin yaratish funksiyasi - DUPLICATNI OLDINI OLADI
 const createSafeSkin = (skin) => {
@@ -304,7 +304,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             // Win sell price ni yangilash
             const winSellBtn = document.getElementById('win-sell-btn');
             if (winSellBtn) {
-                winSellBtn.innerHTML = `💰 SOTISH (${safeWon.price.toLocaleString()} 🪙)`;
+                winSellBtn.innerHTML = `💰 SOTISH (${safeWon.price.toLocaleString()} ${COIN_ICON})`;
             }
             
             // Win buttons ko'rsatish
@@ -382,7 +382,7 @@ function renderInventory() {
     // Show sell all button and total value
     if (sellAllBtn) sellAllBtn.classList.remove('hidden');
     const totalValue = userInventory.reduce((sum, i) => sum + (i?.price || 0), 0);
-    if (totalValueEl) totalValueEl.innerText = `${userInventory.length} ta skin • ${totalValue.toLocaleString()} coin`;
+    if (totalValueEl) totalValueEl.innerHTML = `${userInventory.length} ta skin • ${totalValue.toLocaleString()} ${COIN_ICON}`;
 
     inventoryList.innerHTML = userInventory.map((item, index) => {
         const safeItem = {
@@ -761,12 +761,12 @@ function showCaseDetail(caseId) {
     
     const priceEl = detail.querySelector('#detail-case-price');
     if (priceEl) {
-        priceEl.textContent = formatCoins(caseData.price);
+        priceEl.innerHTML = formatCoins(caseData.price);
     }
     
     const openCasePrice = detail.querySelector('#open-case-price');
     if (openCasePrice) {
-        openCasePrice.textContent = `(${formatCoins(caseData.price)})`;
+        openCasePrice.innerHTML = `(${formatCoins(caseData.price)})`;
     }
     
     renderDetailItems(caseData);
