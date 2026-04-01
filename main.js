@@ -9,7 +9,7 @@ const DEFAULT_STATUS = "OCHISHGA TAYYOR";
 const CURRENCY_LABEL = "coin";
 
 // Formatlash funksiyalari
-const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} <span class="material-icons-outlined text-yellow-500 align-middle" style="font-size:inherit">monetization_on</span>`;
+const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} 🪙`;
 
 // Xavfsiz skin yaratish funksiyasi - DUPLICATNI OLDINI OLADI
 const createSafeSkin = (skin) => {
@@ -304,7 +304,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             // Win sell price ni yangilash
             const winSellBtn = document.getElementById('win-sell-btn');
             if (winSellBtn) {
-                winSellBtn.innerHTML = `💰 SOTISH (${safeWon.price.toLocaleString()} <span class="material-icons-outlined align-middle" style="font-size:inherit">monetization_on</span>)`;
+                winSellBtn.innerHTML = `💰 SOTISH (${safeWon.price.toLocaleString()} 🪙)`;
             }
             
             // Win buttons ko'rsatish
