@@ -233,6 +233,87 @@ app.post('/api/open-case', async (req, res) => {
     }
 });
 
+// --- SELL API ---
+
+// Bitta skinni sotish
+app.post('/api/sell-item', async (req, res) => {
+    try {
+        const { userId, itemIndex } = req.body;
+        if (userId === undefined || itemIndex === undefined) {
+            return res.status(400).json({ success: false, message: "userId yoki itemIndex yo'q" });
+        }
+        
+        const user = await User.findOne({ telegramId: Number(userId) });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Foydalanuvchi topilmadi" });
+        }
+        
+        if (itemIndex < 0 || itemIndex >= user.inventory.length) {
+            return res.status(400).json({ success: false, message: "Noto'g'ri item index" });
+        }
+        
+        const item = user.inventory[itemIndex];
+        const sellPrice = Math.floor((item.price || 0) * 0.7);
+        
+        user.coins += sellPrice;
+        user.inventory.splice(itemIndex, 1);
+        user.lastActive = new Date();
+        await user.save();
+        
+        console.log(`💰 User ${user.telegramId} sold: ${item.name} for ${sellPrice} coins`);
+        
+        res.json({
+            success: true,
+            soldItem: item.name,
+            sellPrice,
+            newBalance: user.coins,
+            inventoryCount: user.inventory.length
+        });
+    } catch (error) {
+        console.error("sell-item API xatosi:", error);
+        res.status(500).json({ success: false, message: error.message || "Server xatosi" });
+    }
+});
+
+// Hammasini sotish
+app.post('/api/sell-all', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "userId yo'q" });
+        }
+        
+        const user = await User.findOne({ telegramId: Number(userId) });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Foydalanuvchi topilmadi" });
+        }
+        
+        if (!user.inventory.length) {
+            return res.status(400).json({ success: false, message: "Invertar bo'sh" });
+        }
+        
+        const totalSellPrice = user.inventory.reduce((sum, item) => sum + Math.floor((item.price || 0) * 0.7), 0);
+        const itemCount = user.inventory.length;
+        
+        user.coins += totalSellPrice;
+        user.inventory = [];
+        user.lastActive = new Date();
+        await user.save();
+        
+        console.log(`💰 User ${user.telegramId} sold ALL ${itemCount} items for ${totalSellPrice} coins`);
+        
+        res.json({
+            success: true,
+            soldCount: itemCount,
+            totalSellPrice,
+            newBalance: user.coins
+        });
+    } catch (error) {
+        console.error("sell-all API xatosi:", error);
+        res.status(500).json({ success: false, message: error.message || "Server xatosi" });
+    }
+});
+
 // --- TELEGRAM BOT LOGIKASI ---
 
 const bot = new Telegraf(process.env.BOT_TOKEN);

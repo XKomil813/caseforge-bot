@@ -130,13 +130,6 @@ async function openCase() {
     
     if (!caseData) {
         console.error("Case ma'lumotlari topilmadi:", caseId);
-        const statusDisplay = document.getElementById('status-text');
-        if (statusDisplay) {
-            statusDisplay.innerHTML = '<span class="text-red-500">Case topilmadi!</span>';
-            setTimeout(() => {
-                if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
-            }, 2000);
-        }
         return;
     }
 
@@ -157,6 +150,19 @@ async function openCase() {
     isOpening = true;
     setButtonState(openBtn, true);
     
+    // Case infoni yashirish, roulette sectionni ko'rsatish
+    const caseInfoSection = document.getElementById('case-info-section');
+    const rouletteSection = document.getElementById('roulette-section');
+    const rouletteCaseName = document.getElementById('roulette-case-name');
+    
+    if (caseInfoSection) caseInfoSection.classList.add('hidden');
+    if (rouletteSection) rouletteSection.classList.remove('hidden');
+    if (rouletteCaseName) rouletteCaseName.innerText = caseData.name;
+    
+    // Win buttons yashirish
+    const winBtns = document.getElementById('win-buttons');
+    if (winBtns) winBtns.classList.add('hidden');
+    
     if (statusDisplay) {
         statusDisplay.innerHTML = '<span class="text-blue-400 animate-pulse italic">🎲 KEYS OCHILMOQDA...</span>';
     }
@@ -176,7 +182,6 @@ async function openCase() {
         userInventory.unshift(safeWon);
         renderInventory();
         
-        // Items pool ni xavfsiz holatga keltirish
         let safePool = [];
         if (Array.isArray(caseData.items)) {
             safePool = caseData.items.map(item => createSafeSkin(item));
@@ -199,7 +204,17 @@ async function openCase() {
         }
         setButtonState(openBtn, false);
         isOpening = false;
+        
+        // Xatolik bo'lsa case infoga qaytish
+        if (caseInfoSection) caseInfoSection.classList.remove('hidden');
+        if (rouletteSection) rouletteSection.classList.add('hidden');
     }
+}
+
+function reopenCase() {
+    const winBtns = document.getElementById('win-buttons');
+    if (winBtns) winBtns.classList.add('hidden');
+    openCase();
 }
 
 function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
@@ -273,6 +288,9 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
         }, 50);
 
         setTimeout(() => {
+            const safeWon = createSafeSkin(wonSkin);
+            const sellPrice = Math.floor(safeWon.price * 0.7);
+            
             if (statusDisplay) {
                 statusDisplay.innerHTML = `
                     <div class="flex flex-col items-center animate-bounce">
@@ -281,10 +299,18 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
                         <span class="text-[10px] text-yellow-400 font-bold">${formatCoins(safeWon.price)}</span>
                     </div>
                 `;
-                setTimeout(() => {
-                    if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
-                }, 4000);
             }
+            
+            // Win sell price ni yangilash
+            const winSellBtn = document.getElementById('win-sell-btn');
+            if (winSellBtn) {
+                winSellBtn.innerHTML = `💰 SOTISH (${sellPrice.toLocaleString()} coin)`;
+            }
+            
+            // Win buttons ko'rsatish
+            const winBtns = document.getElementById('win-buttons');
+            if (winBtns) winBtns.classList.remove('hidden');
+            
             setButtonState(openBtn, false);
             isOpening = false;
         }, 4500);
@@ -332,11 +358,18 @@ async function incrementGlobalCounter() {
 }
 
 // ============ INVENTORY ============
+let currentModalItemIndex = -1;
+
 function renderInventory() {
     const inventoryList = document.getElementById('inventory-list');
     if (!inventoryList) return;
 
+    const sellAllBtn = document.getElementById('sell-all-btn');
+    const totalValueEl = document.getElementById('inventory-total-value');
+
     if (!userInventory || !userInventory.length) {
+        if (sellAllBtn) sellAllBtn.classList.add('hidden');
+        if (totalValueEl) totalValueEl.innerText = '';
         inventoryList.innerHTML = `
             <div class="col-span-2 flex flex-col items-center justify-center py-20 opacity-20">
                 <span class="material-icons-outlined text-5xl">inventory_2</span>
@@ -345,6 +378,11 @@ function renderInventory() {
         `;
         return;
     }
+
+    // Show sell all button and total value
+    if (sellAllBtn) sellAllBtn.classList.remove('hidden');
+    const totalValue = userInventory.reduce((sum, i) => sum + Math.floor((i?.price || 0) * 0.7), 0);
+    if (totalValueEl) totalValueEl.innerText = `${userInventory.length} ta skin • ${totalValue.toLocaleString()} coin`;
 
     inventoryList.innerHTML = userInventory.map((item, index) => {
         const safeItem = {
@@ -373,6 +411,7 @@ function showItemDetail(index) {
     const item = userInventory[index];
     if (!item) return;
 
+    currentModalItemIndex = index;
     const modal = document.getElementById('item-detail-modal');
     if (!modal) return;
 
@@ -382,7 +421,6 @@ function showItemDetail(index) {
         image: item?.image || "https://via.placeholder.com/300?text=No+Image"
     };
 
-    // Qurol va skin nomini ajratish (masalan: "AK-47 | Slate" -> weapon: "AK-47", skin: "Slate")
     let weaponName = '';
     let skinName = safeItem.name;
     if (safeItem.name.includes(' | ')) {
@@ -391,7 +429,6 @@ function showItemDetail(index) {
         skinName = parts.slice(1).join(' | ').trim();
     }
 
-    // Grade aniqlash (narx bo'yicha)
     let gradeName, gradeColor;
     if (safeItem.price >= 10000) {
         gradeName = 'COVERT'; gradeColor = 'bg-red-600 text-white';
@@ -416,6 +453,9 @@ function showItemDetail(index) {
     gradeEl.className = `text-[10px] font-bold uppercase px-3 py-1 rounded-full ${gradeColor}`;
     
     document.getElementById('item-modal-price').innerText = safeItem.price.toLocaleString();
+    
+    const sellPrice = Math.floor(safeItem.price * 0.7);
+    document.getElementById('item-modal-sell-price').innerText = sellPrice.toLocaleString();
 
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -427,6 +467,133 @@ function closeItemDetail() {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
     }
+    currentModalItemIndex = -1;
+}
+
+// ============ SELL FUNCTIONS ============
+async function sellItemFromModal() {
+    if (currentModalItemIndex < 0) return;
+    
+    const btn = document.getElementById('item-modal-sell-btn');
+    if (btn) btn.disabled = true;
+    
+    try {
+        const res = await fetch(`${RENDER_URL}/api/sell-item`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, itemIndex: currentModalItemIndex })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            userBalance = data.newBalance;
+            updateBalanceDisplay();
+            userInventory.splice(currentModalItemIndex, 1);
+            renderInventory();
+            closeItemDetail();
+            
+            if (tg && tg.showPopup) {
+                tg.showPopup({ title: 'Sotildi!', message: `${data.soldItem} sotildi! +${data.sellPrice} coin`, buttons: [{ type: 'ok' }] });
+            }
+        } else {
+            if (tg && tg.showPopup) {
+                tg.showPopup({ title: 'Xatolik', message: data.message || 'Sotishda xatolik', buttons: [{ type: 'ok' }] });
+            }
+        }
+    } catch (error) {
+        console.error('Sell error:', error);
+    }
+    
+    if (btn) btn.disabled = false;
+}
+
+async function sellAllItems() {
+    if (!userInventory.length) return;
+    
+    const totalSellPrice = userInventory.reduce((sum, i) => sum + Math.floor((i?.price || 0) * 0.7), 0);
+    
+    if (tg && tg.showConfirm) {
+        tg.showConfirm(
+            `${userInventory.length} ta skinni ${totalSellPrice.toLocaleString()} coinga sotasizmi?`,
+            async (confirmed) => {
+                if (confirmed) await executeSellAll();
+            }
+        );
+    } else {
+        if (confirm(`${userInventory.length} ta skinni ${totalSellPrice.toLocaleString()} coinga sotasizmi?`)) {
+            await executeSellAll();
+        }
+    }
+}
+
+async function executeSellAll() {
+    const btn = document.getElementById('sell-all-btn');
+    if (btn) btn.disabled = true;
+    
+    try {
+        const res = await fetch(`${RENDER_URL}/api/sell-all`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            userBalance = data.newBalance;
+            updateBalanceDisplay();
+            userInventory = [];
+            renderInventory();
+            
+            if (tg && tg.showPopup) {
+                tg.showPopup({ title: 'Sotildi!', message: `${data.soldCount} ta skin sotildi! +${data.totalSellPrice} coin`, buttons: [{ type: 'ok' }] });
+            }
+        }
+    } catch (error) {
+        console.error('Sell all error:', error);
+    }
+    
+    if (btn) btn.disabled = false;
+}
+
+// Yutilgan skinni sotish (rouletteden keyin)
+async function sellWonSkin() {
+    const lastItem = userInventory[0];
+    if (!lastItem) return;
+    
+    const btn = document.getElementById('win-sell-btn');
+    if (btn) btn.disabled = true;
+    
+    try {
+        const res = await fetch(`${RENDER_URL}/api/sell-item`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, itemIndex: 0 })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            userBalance = data.newBalance;
+            updateBalanceDisplay();
+            userInventory.splice(0, 1);
+            renderInventory();
+            
+            const statusDisplay = document.getElementById('status-text');
+            if (statusDisplay) {
+                statusDisplay.innerHTML = `<span class="text-green-400 font-black text-[11px]">✅ Sotildi! +${data.sellPrice} coin</span>`;
+                setTimeout(() => {
+                    if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;
+                }, 2500);
+            }
+            
+            // Hide win buttons
+            const winBtns = document.getElementById('win-buttons');
+            if (winBtns) winBtns.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Sell won skin error:', error);
+    }
+    
+    if (btn) btn.disabled = false;
 }
 
 // Modal yopish eventlari
@@ -475,42 +642,65 @@ function setupKeysSection() {
             </div>
 
             <div id="case-detail" class="hidden space-y-6 text-left">
-                <div class="relative overflow-hidden rounded-[32px] border border-white/10 bg-black/40">
-                    <div class="case-detail-hero min-h-[60vh] md:min-h-[80vh] flex items-center justify-center p-6">
-                        <img id="detail-case-image" src="" class="max-h-full object-contain drop-shadow-[0_0_40px_rgba(59,130,246,0.6)]">
-                    </div>
-                    <div class="p-5 bg-gradient-to-t from-black/80 to-transparent space-y-2">
-                        <div class="flex items-center justify-between">
-                            <p id="detail-case-name" class="text-lg font-black uppercase font-gaming text-white">Eco Case</p>
-                            <button id="back-to-list-btn" class="text-[10px] uppercase tracking-[0.4em] text-blue-400">ORQAGA</button>
+                <!-- Case info (ko'rinadi) -->
+                <div id="case-info-section" class="space-y-4">
+                    <div class="relative overflow-hidden rounded-[32px] border border-white/10 bg-black/40">
+                        <div class="case-detail-hero min-h-[40vh] flex items-center justify-center p-6">
+                            <img id="detail-case-image" src="" class="max-h-full object-contain drop-shadow-[0_0_40px_rgba(59,130,246,0.6)]">
                         </div>
-                        <p id="detail-case-price" class="text-[12px] tracking-[0.3em] text-yellow-400 font-bold"></p>
+                        <div class="p-5 bg-gradient-to-t from-black/80 to-transparent space-y-2">
+                            <div class="flex items-center justify-between">
+                                <p id="detail-case-name" class="text-lg font-black uppercase font-gaming text-white">Eco Case</p>
+                                <button id="back-to-list-btn" class="text-[10px] uppercase tracking-[0.4em] text-blue-400">ORQAGA</button>
+                            </div>
+                            <p id="detail-case-price" class="text-[12px] tracking-[0.3em] text-yellow-400 font-bold"></p>
+                        </div>
                     </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <p class="text-[10px] uppercase tracking-[0.5em] text-white/80 font-bold">Case ichidagi itemlar</p>
+                            <p class="text-[8px] uppercase tracking-[0.4em] text-blue-400 font-bold">Coins qiymat</p>
+                        </div>
+                        <div id="detail-items" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                    </div>
+
+                    <button id="openBtn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl font-gaming font-bold text-base tracking-[1px] shadow-xl shadow-blue-900/30 active:scale-95 transition-all flex items-center justify-center space-x-2">
+                        <span>KEYSNI OCHISH</span>
+                        <span class="text-yellow-400 text-xs" id="open-case-price"></span>
+                    </button>
                 </div>
 
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <p class="text-[10px] uppercase tracking-[0.5em] text-white/80 font-bold">Case ichidagi itemlar</p>
-                        <p class="text-[8px] uppercase tracking-[0.4em] text-blue-400 font-bold">Coins qiymat</p>
+                <!-- Roulette section (yashirin, faqat case ochganda ko'rinadi) -->
+                <div id="roulette-section" class="hidden">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between px-1">
+                            <button id="roulette-back-btn" class="text-white/60 flex items-center gap-1 text-[10px] uppercase tracking-widest">
+                                <span class="material-icons-outlined text-lg">arrow_back</span> ORQAGA
+                            </button>
+                            <p id="roulette-case-name" class="text-[10px] font-gaming uppercase tracking-widest text-blue-400"></p>
+                        </div>
+
+                        <div id="roulette-container" class="relative w-full overflow-hidden bg-[#0a0a0a] h-36 rounded-2xl border-2 border-white/5 flex items-center transition-all">
+                            <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-red-600 z-50 shadow-[0_0_15px_rgba(220,38,38,0.8)] -translate-x-1/2"></div>
+                            <div id="roulette-items" class="flex flex-nowrap items-center absolute left-0 h-full whitespace-nowrap"></div>
+                        </div>
+
+                        <div id="status-text" class="h-14 flex items-center justify-center font-gaming text-[10px] tracking-widest uppercase text-white/60 text-center transition-all">
+                            OCHISHGA TAYYOR
+                        </div>
+
+                        <!-- Win buttons (Sotish + Qayta ochish) -->
+                        <div id="win-buttons" class="hidden space-y-3">
+                            <button id="win-sell-btn" onclick="sellWonSkin()" class="w-full py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl font-gaming font-bold text-sm tracking-wider shadow-xl shadow-red-900/30 active:scale-95 transition-all text-white">
+                                💰 SOTISH
+                            </button>
+                            <button id="win-reopen-btn" onclick="reopenCase()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl font-gaming font-bold text-sm tracking-wider shadow-xl shadow-blue-900/30 active:scale-95 transition-all text-white">
+                                🔄 QAYTA OCHISH
+                            </button>
+                        </div>
                     </div>
-                    <div id="detail-items" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
                 </div>
-
-                <div class="space-y-4">
-                    <div id="roulette-container" class="relative w-full overflow-hidden bg-[#0a0a0a] h-36 rounded-2xl border-2 border-white/5 flex items-center transition-all">
-                        <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-red-600 z-50 shadow-[0_0_15px_rgba(220,38,38,0.8)] -translate-x-1/2"></div>
-                        <div id="roulette-items" class="flex flex-nowrap items-center absolute left-0 h-full whitespace-nowrap"></div>
-                    </div>
-
-                    <div id="status-text" class="h-14 flex items-center justify-center font-gaming text-[10px] tracking-widest uppercase text-white/60 text-center transition-all">
-                        OCHISHGA TAYYOR
-                    </div>
-                </div>
-
-                <button id="openBtn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl font-gaming font-bold text-base tracking-[1px] shadow-xl shadow-blue-900/30 active:scale-95 transition-all flex items-center justify-center space-x-2">
-                    <span>KEYSNI OCHISH</span>
-                    <span class="text-yellow-400 text-xs" id="open-case-price"></span>
-                </button>
             </div>
         </div>
     `;
@@ -526,6 +716,16 @@ function setupKeysSection() {
         backBtn.addEventListener('click', (event) => {
             event.stopPropagation();
             showCaseList();
+        });
+    }
+
+    const rouletteBackBtn = keysSection.querySelector('#roulette-back-btn');
+    if (rouletteBackBtn) {
+        rouletteBackBtn.addEventListener('click', () => {
+            // Rouletteni yashirish, case infoni ko'rsatish
+            document.getElementById('roulette-section').classList.add('hidden');
+            document.getElementById('case-info-section').classList.remove('hidden');
+            document.getElementById('win-buttons').classList.add('hidden');
         });
     }
 }
@@ -577,6 +777,12 @@ function showCaseList() {
         detail.classList.add('hidden');
         list.classList.remove('hidden');
     }
+    // Reset sections
+    const caseInfoSection = document.getElementById('case-info-section');
+    const rouletteSection = document.getElementById('roulette-section');
+    if (caseInfoSection) caseInfoSection.classList.remove('hidden');
+    if (rouletteSection) rouletteSection.classList.add('hidden');
+    
     currentCaseId = DEFAULT_CASE_ID;
     const statusDisplay = document.getElementById('status-text');
     if (statusDisplay) statusDisplay.innerText = DEFAULT_STATUS;

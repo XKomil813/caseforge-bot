@@ -140,7 +140,13 @@
 
             <div id="inventory-section" class="section hidden">
                 <div class="glass border border-white/10 rounded-[32px] p-6 shadow-2xl min-h-[400px]">
-                    <h2 class="text-lg font-black font-gaming uppercase italic text-yellow-500 mb-6 text-center">Invertar</h2>
+                    <h2 class="text-lg font-black font-gaming uppercase italic text-yellow-500 mb-4 text-center">Invertar</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <p id="inventory-total-value" class="text-[10px] text-gray-400"></p>
+                        <button id="sell-all-btn" onclick="sellAllItems()" class="hidden bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-xl text-[9px] font-black font-gaming uppercase shadow-lg active:scale-95 transition-all">
+                            💰 HAMMASINI SOTISH
+                        </button>
+                    </div>
                     <div id="inventory-list" class="grid grid-cols-2 gap-3"></div>
                 </div>
             </div>
@@ -162,16 +168,24 @@
                         <img id="item-modal-image" src="" class="w-[85vw] h-auto max-h-[55vh] object-contain drop-shadow-[0_0_60px_rgba(59,130,246,0.3)]">
                     </div>
                     <!-- Info -->
-                    <div class="px-6 pb-10 space-y-2">
+                    <div class="px-6 pb-6 space-y-2">
                         <p id="item-modal-weapon" class="text-sm text-white/50 uppercase tracking-widest"></p>
                         <h2 id="item-modal-name" class="text-2xl font-black text-white"></h2>
                         <div class="flex items-center gap-2">
                             <span id="item-modal-grade" class="text-[10px] font-bold uppercase px-3 py-1 rounded-full"></span>
                         </div>
-                        <div class="flex items-center justify-end mt-2">
-                            <span id="item-modal-price" class="text-xl font-black text-yellow-400"></span>
-                            <span class="text-yellow-500 ml-1">🪙</span>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex items-center">
+                                <span id="item-modal-price" class="text-xl font-black text-yellow-400"></span>
+                                <span class="text-yellow-500 ml-1">🪙</span>
+                            </div>
                         </div>
+                    </div>
+                    <!-- Sell button -->
+                    <div class="px-6 pb-8">
+                        <button id="item-modal-sell-btn" onclick="sellItemFromModal()" class="w-full py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl font-gaming font-bold text-sm tracking-wider shadow-xl shadow-red-900/30 active:scale-95 transition-all text-white">
+                            💰 SOTISH (<span id="item-modal-sell-price">0</span> coin)
+                        </button>
                     </div>
                 </div>
             </div>
