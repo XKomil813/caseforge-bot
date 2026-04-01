@@ -253,7 +253,7 @@ app.post('/api/sell-item', async (req, res) => {
         }
         
         const item = user.inventory[itemIndex];
-        const sellPrice = Math.floor((item.price || 0) * 0.7);
+        const sellPrice = item.price || 0;
         
         user.coins += sellPrice;
         user.inventory.splice(itemIndex, 1);
@@ -292,7 +292,7 @@ app.post('/api/sell-all', async (req, res) => {
             return res.status(400).json({ success: false, message: "Invertar bo'sh" });
         }
         
-        const totalSellPrice = user.inventory.reduce((sum, item) => sum + Math.floor((item.price || 0) * 0.7), 0);
+        const totalSellPrice = user.inventory.reduce((sum, item) => sum + (item.price || 0), 0);
         const itemCount = user.inventory.length;
         
         user.coins += totalSellPrice;

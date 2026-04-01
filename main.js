@@ -9,7 +9,7 @@ const DEFAULT_STATUS = "OCHISHGA TAYYOR";
 const CURRENCY_LABEL = "coin";
 
 // Formatlash funksiyalari
-const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} ${CURRENCY_LABEL}`;
+const formatCoins = (value) => `${Number(value || 0).toLocaleString('en-US')} <span class="material-icons-outlined text-yellow-500 align-middle" style="font-size:inherit">monetization_on</span>`;
 
 // Xavfsiz skin yaratish funksiyasi - DUPLICATNI OLDINI OLADI
 const createSafeSkin = (skin) => {
@@ -71,7 +71,7 @@ async function loadUserData() {
 
 function updateBalanceDisplay() {
     const display = document.getElementById('balance-display');
-    if (display) display.innerText = formatCoins(Math.floor(userBalance));
+    if (display) display.innerHTML = formatCoins(Math.floor(userBalance));
 }
 
 function setButtonState(btn, disabled) {
@@ -251,8 +251,8 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
         itemsContainer.style.transition = 'none';
         itemsContainer.style.left = '0px';
 
-        const totalItems = 25;
-        const winningIndex = 20;
+        const totalItems = 45;
+        const winningIndex = 40;
         const itemWidth = 112;
 
         for (let i = 0; i < totalItems; i++) {
@@ -283,13 +283,13 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
         setTimeout(() => {
             const parentWidth = parentContainer.offsetWidth;
             const targetOffset = (winningIndex * itemWidth) - (parentWidth / 2) + (itemWidth / 2);
-            itemsContainer.style.transition = 'left 4s cubic-bezier(0.1, 0, 0.05, 1)';
+            itemsContainer.style.transition = 'left 3s cubic-bezier(0.1, 0, 0.05, 1)';
             itemsContainer.style.left = `-${Math.max(0, targetOffset)}px`;
         }, 50);
 
         setTimeout(() => {
             const safeWon = createSafeSkin(wonSkin);
-            const sellPrice = Math.floor(safeWon.price * 0.7);
+            const sellPrice = safeWon.price;
             
             if (statusDisplay) {
                 statusDisplay.innerHTML = `
@@ -304,7 +304,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             // Win sell price ni yangilash
             const winSellBtn = document.getElementById('win-sell-btn');
             if (winSellBtn) {
-                winSellBtn.innerHTML = `💰 SOTISH (${sellPrice.toLocaleString()} coin)`;
+                winSellBtn.innerHTML = `💰 SOTISH (${safeWon.price.toLocaleString()} <span class="material-icons-outlined align-middle" style="font-size:inherit">monetization_on</span>)`;
             }
             
             // Win buttons ko'rsatish
@@ -313,7 +313,7 @@ function startRoulette(wonSkin, itemsPool, openBtn, statusDisplay) {
             
             setButtonState(openBtn, false);
             isOpening = false;
-        }, 4500);
+        }, 3500);
 
     } catch (err) {
         console.error('Ruletka xatosi:', err);
@@ -381,7 +381,7 @@ function renderInventory() {
 
     // Show sell all button and total value
     if (sellAllBtn) sellAllBtn.classList.remove('hidden');
-    const totalValue = userInventory.reduce((sum, i) => sum + Math.floor((i?.price || 0) * 0.7), 0);
+    const totalValue = userInventory.reduce((sum, i) => sum + (i?.price || 0), 0);
     if (totalValueEl) totalValueEl.innerText = `${userInventory.length} ta skin • ${totalValue.toLocaleString()} coin`;
 
     inventoryList.innerHTML = userInventory.map((item, index) => {
@@ -454,7 +454,7 @@ function showItemDetail(index) {
     
     document.getElementById('item-modal-price').innerText = safeItem.price.toLocaleString();
     
-    const sellPrice = Math.floor(safeItem.price * 0.7);
+    const sellPrice = safeItem.price;
     document.getElementById('item-modal-sell-price').innerText = sellPrice.toLocaleString();
 
     modal.classList.remove('hidden');
@@ -510,7 +510,7 @@ async function sellItemFromModal() {
 async function sellAllItems() {
     if (!userInventory.length) return;
     
-    const totalSellPrice = userInventory.reduce((sum, i) => sum + Math.floor((i?.price || 0) * 0.7), 0);
+    const totalSellPrice = userInventory.reduce((sum, i) => sum + (i?.price || 0), 0);
     
     const doSell = () => {
         executeSellAll();
