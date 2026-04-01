@@ -761,12 +761,12 @@ function showCaseDetail(caseId) {
     
     const priceEl = detail.querySelector('#detail-case-price');
     if (priceEl) {
-        priceEl.innerText = formatCoins(caseData.price);
+        priceEl.textContent = formatCoins(caseData.price);
     }
     
     const openCasePrice = detail.querySelector('#open-case-price');
     if (openCasePrice) {
-        openCasePrice.innerText = `(${formatCoins(caseData.price)})`;
+        openCasePrice.textContent = `(${formatCoins(caseData.price)})`;
     }
     
     renderDetailItems(caseData);
