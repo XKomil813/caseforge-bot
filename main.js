@@ -529,37 +529,46 @@ function renderDetailItems(caseData) {
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing...");
+
     // FULLSCREEN UCHUN
-    if (window.Telegram && window.Telegram.WebApp) {
-        const tgApp = window.Telegram.WebApp;
-        
-        // Ready
-        tgApp.ready();
+    if (tg) {
+        // Ready chaqirish
+        tg.ready();
         
         // Expand qilish
-        tgApp.expand();
-        
-        // Fullscreen so'rash (Telegram Bot API 8.0+)
-        if (tgApp.requestFullscreen) {
-            tgApp.requestFullscreen();
-        }
+        tg.expand();
         
         // Swipe bilan yopilishni o'chirish
-        if (tgApp.disableVerticalSwipes) {
-            tgApp.disableVerticalSwipes();
+        if (tg.disableVerticalSwipes) {
+            tg.disableVerticalSwipes();
         }
         
         // Main buttonni yashirish
-        if (tgApp.MainButton) tgApp.MainButton.hide();
+        if (tg.MainButton) tg.MainButton.hide();
         
-        // Background color
-        tgApp.setBackgroundColor("#08090d");
-        tgApp.setHeaderColor("#08090d");
+        // Background va header color
+        try { tg.setBackgroundColor("#08090d"); } catch(e) {}
+        try { tg.setHeaderColor("#08090d"); } catch(e) {
+            try { tg.setHeaderColor("bg_color"); } catch(e2) {}
+        }
         
-        console.log("Telegram WebApp fullscreen requested");
+        // Fullscreen so'rash (Telegram Bot API 8.0+) - kechikish bilan
+        setTimeout(() => {
+            if (tg.requestFullscreen) {
+                try {
+                    tg.requestFullscreen();
+                    console.log("Fullscreen requested!");
+                } catch(e) {
+                    console.log("Fullscreen not supported:", e);
+                }
+            }
+            // Yana bir marta expand
+            tg.expand();
+        }, 300);
+
+        console.log("Telegram WebApp initialized, version:", tg.version);
     }
-    console.log("CASES_DATA loaded:", typeof window.CASES_DATA !== 'undefined');
-    
+
     loadUserData();
     updateGlobalCounter();
     setupKeysSection();
@@ -568,14 +577,5 @@ document.addEventListener('DOMContentLoaded', () => {
     const openBtn = document.getElementById('openBtn');
     if (openBtn) {
         openBtn.addEventListener('click', openCase);
-    }
-
-    if (tg && tg.ready) {
-        tg.ready(() => {
-            if (tg.expand) tg.expand();
-            if (tg.MainButton) tg.MainButton.hide();
-        });
-    } else if (tg && tg.expand) {
-        tg.expand();
     }
 });
