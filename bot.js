@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
+const path = require('path');
 const { CASES_DATA } = require('./cases.js');
 console.log('CASES_DATA loaded:', Object.keys(CASES_DATA));
 
@@ -68,6 +69,12 @@ app.use((req, res, next) => {
 //     }
 //     next();
 // });
+
+// --- FRONTEND FAYLLARNI XIZMAT KO'RSATISH ---
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/main.js', (req, res) => res.sendFile(path.join(__dirname, 'main.js')));
+app.get('/cases.js', (req, res) => res.sendFile(path.join(__dirname, 'cases.js')));
+app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
 
 // --- DATABASE ULANISHI ---
 // Eski optionlarni O'CHIRIB tashladik
