@@ -255,7 +255,8 @@ bot.start(async (ctx) => {
             { upsert: true, returnDocument: 'after' }  // 'new: true' o'rniga
         );
         
-        const webAppUrl = process.env.BOT_WEBAPP_URL + '?startapp=fullscreen';
+        const webAppUrl = process.env.BOT_WEBAPP_URL;
+        const botUsername = (await bot.telegram.getMe()).username;
         if (!webAppUrl) {
             console.error('BOT_WEBAPP_URL environment variable not set!');
             return ctx.reply('❌ Bot sozlamalarida xatolik. Iltimos administratorga murojaat qiling.');
@@ -273,9 +274,10 @@ bot.start(async (ctx) => {
         
         await ctx.reply(welcomeMessage, {
             parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([[
-                Markup.button.webApp("🎮 O'yinni ochish", webAppUrl)
-            ]])
+            ...Markup.inlineKeyboard([
+                [Markup.button.webApp("🎮 O'yinni ochish", webAppUrl)],
+                [Markup.button.url("📱 Fullscreen ochish", `https://t.me/${botUsername}/app`)]
+            ])
         });
         
     } catch (error) {
